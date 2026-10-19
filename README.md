@@ -17,7 +17,7 @@ Gereksinim: macOS 14 veya üstü, Apple Silicon ya da Intel.
 
 ### 1. Uygulama olarak indir (en kolayı)
 
-1. [Releases](https://github.com/Piercies3sc/ullage/releases/latest) sayfasından **`Ullage.zip`** dosyasını indir ve aç.
+1. [Releases](https://github.com/mertpural/ullage/releases/latest) sayfasından **`Ullage.zip`** dosyasını indir ve aç.
 2. `Ullage.app`'i **Uygulamalar** klasörüne sürükle.
 3. Uygulama imzasız olduğu için macOS ilk açılışta engelleyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de (bir kez yeterli).
 4. Menü çubuğunda belirir.
@@ -25,7 +25,7 @@ Gereksinim: macOS 14 veya üstü, Apple Silicon ya da Intel.
 ### 2. Terminalden tek satırla kur
 
 ```bash
-curl -L https://github.com/Piercies3sc/ullage/releases/latest/download/Ullage.zip -o /tmp/Ullage.zip \
+curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip -o /tmp/Ullage.zip \
   && unzip -q -o /tmp/Ullage.zip -d /Applications \
   && xattr -cr /Applications/Ullage.app \
   && open /Applications/Ullage.app
@@ -36,7 +36,7 @@ Güncellemek için aynı komutu tekrar çalıştır. Kaldırmak için `/Applicat
 ### 3. Kaynaktan derle
 
 ```bash
-git clone https://github.com/Piercies3sc/ullage.git
+git clone https://github.com/mertpural/ullage.git
 cd ullage/macos
 ./scripts/build_app.sh        # build/Ullage.app üretir
 open build/Ullage.app
