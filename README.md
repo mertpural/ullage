@@ -11,16 +11,42 @@ Claude, Codex ve Antigravity desteklenir (Gemini CLI kotası, hesabında Code As
 
 Hiçbir veri bir sunucuya gönderilmez. Her şey kendi Mac'inde, kendi oturumlarınla okunur.
 
-## Kurulum
+## Kurulum (macOS)
 
-1. [Releases](../../releases) sayfasından `Ullage.zip` dosyasını indir ve aç.
-2. `Ullage.app`'i Uygulamalar klasörüne taşı.
-3. Uygulama imzasız olduğu için macOS ilk açılışta engelleyebilir. Şunlardan birini yap:
-   - Uygulamaya **sağ tıkla → Aç → Aç**, ya da
-   - Terminal'de: `xattr -cr /Applications/Ullage.app`
+Gereksinim: macOS 14 veya üstü, Apple Silicon ya da Intel.
+
+### 1. Uygulama olarak indir (en kolayı)
+
+1. [Releases](https://github.com/Piercies3sc/ullage/releases/latest) sayfasından **`Ullage.zip`** dosyasını indir ve aç.
+2. `Ullage.app`'i **Uygulamalar** klasörüne sürükle.
+3. Uygulama imzasız olduğu için macOS ilk açılışta engelleyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de (bir kez yeterli).
 4. Menü çubuğunda belirir.
 
-Gereksinim: macOS 14 veya üstü.
+### 2. Terminalden tek satırla kur
+
+```bash
+curl -L https://github.com/Piercies3sc/ullage/releases/latest/download/Ullage.zip -o /tmp/Ullage.zip \
+  && unzip -q -o /tmp/Ullage.zip -d /Applications \
+  && xattr -cr /Applications/Ullage.app \
+  && open /Applications/Ullage.app
+```
+
+Güncellemek için aynı komutu tekrar çalıştır. Kaldırmak için `/Applications/Ullage.app`'i sil.
+
+### 3. Kaynaktan derle
+
+```bash
+git clone https://github.com/Piercies3sc/ullage.git
+cd ullage/macos
+./scripts/build_app.sh        # build/Ullage.app üretir
+open build/Ullage.app
+```
+
+Xcode'un tamamı gerekmez, Command Line Tools (`xcode-select --install`) yeterlidir.
+
+## Windows
+
+Windows sürümü [`windows/`](windows) klasöründe geliştirilecek. Henüz hazır değil.
 
 ## Verileri nereden okur
 
@@ -36,16 +62,6 @@ Ek gereksinimler:
 - Gemini oturumunu yenilemek için Gemini CLI kurulu olmalı: `npm i -g @google/gemini-cli`.
 
 Veri alınamayan ya da tahmini olan her şey Ayarlar > Sağlayıcılar sayfasında açıkça "Kesin / Tahmini / Veri yok" etiketiyle gösterilir. Uydurma değer gösterilmez.
-
-## Kaynaktan derleme
-
-```bash
-git clone <bu-depo>
-cd <depo>
-./scripts/build_app.sh        # build/Ullage.app üretir
-```
-
-Xcode'un tamamı gerekmez, Command Line Tools (`xcode-select --install`) yeterlidir.
 
 ## Notlar
 
