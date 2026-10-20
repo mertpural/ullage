@@ -1,28 +1,34 @@
 # Ullage
 
-Mac menü çubuğunda yapay zekâ araçlarının **5 saatlik ve haftalık limitini** ve **token kullanımını** gösteren küçük bir uygulama.
-Claude, Codex ve Antigravity desteklenir (Gemini CLI kotası, hesabında Code Assist lisansı varsa).
+Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan gösteren küçük bir uygulama.
+5 saatlik ve haftalık limitini, harcadığın token'ı ve geçmiş kullanımını tek yerden görürsün.
 
-- Menü çubuğunda `5s 77%  H 48%`: 5 saatlik ve haftalık kalan limit ayrı ayrı, göstergesini (yüzde, çubuk, halka, pil, segment) sen seçersin.
-- Popover: sıfırlanma geri sayımı, tempo göstergesi ("Rahat / Dengeli / Hızlı"), son 7 günün token grafiği.
-- Kullanım penceresi: GitHub tarzı etkinlik tablosu, seri sayacı, gün/hafta/ay grafikleri, sağlayıcıya ve modele göre dağılım.
-- 9 tema, bildirimler, ayarlanabilir yenileme aralığı.
-- Veri kalıcı: log dosyaları silinse bile geçmiş kendi veritabanında kalır.
+## ⬇️ İndir
 
-Hiçbir veri bir sunucuya gönderilmez. Her şey kendi Mac'inde, kendi oturumlarınla okunur.
+**[Ullage.zip'i indir (macOS)](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip)**
 
-## Kurulum (macOS)
+İndirince zip'i aç, `Ullage.app`'i Uygulamalar klasörüne at, bitti.
 
-Gereksinim: macOS 14 veya üstü, Apple Silicon ya da Intel.
+> İlk açılışta Mac "tanınmayan geliştirici" diyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de, bir kere yeterli.
 
-### 1. Uygulama olarak indir (en kolayı)
+## Ne yapıyor?
 
-1. [Releases](https://github.com/mertpural/ullage/releases/latest) sayfasından **`Ullage.zip`** dosyasını indir ve aç.
-2. `Ullage.app`'i **Uygulamalar** klasörüne sürükle.
-3. Uygulama imzasız olduğu için macOS ilk açılışta engelleyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de (bir kez yeterli).
-4. Menü çubuğunda belirir.
+- Menü çubuğunda `5s 77%  H 48%` gibi görünür: 5 saatlik ve haftalık kalan hakkın ayrı ayrı. Gösterimi (yüzde, çubuk, halka, pil...) sen seçersin.
+- Tıklayınca hakkın ne zaman yenileneceğini ve şu tempoyla gidersen yetip yetmeyeceğini gösterir.
+- Kullanım sayfasında GitHub'daki katkı tablosuna benzer bir etkinlik tablosu, seri sayacı ve günlük/haftalık/aylık token grafikleri var.
+- 9 farklı tema, bildirimler (hakkın azalınca haber verir) ve ayarlanabilir yenileme süresi.
+- Hiçbir veri bir yere gönderilmez. Her şey kendi bilgisayarında, kendi hesabınla okunur.
 
-### 2. Terminalden tek satırla kur
+Desteklenenler: **Claude, Codex, Antigravity** (Gemini de hesabında Code Assist lisansı varsa).
+
+## Kurulum
+
+Gereksinim: macOS 14 veya üstü (Apple Silicon ve Intel ikisi de olur).
+
+### Yol 1: Zip ile (en kolayı)
+Yukarıdaki indir bağlantısına tıkla, zip'i aç, `Ullage.app`'i Uygulamalar'a taşı.
+
+### Yol 2: Terminalden tek satır
 
 ```bash
 curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip -o /tmp/Ullage.zip \
@@ -31,43 +37,44 @@ curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip 
   && open /Applications/Ullage.app
 ```
 
-Güncellemek için aynı komutu tekrar çalıştır. Kaldırmak için `/Applications/Ullage.app`'i sil.
+Güncellemek için aynı komutu tekrar çalıştır. Silmek için `/Applications/Ullage.app`'i çöpe at.
 
-### 3. Kaynaktan derle
+### Yol 3: Kendin derle
 
 ```bash
 git clone https://github.com/mertpural/ullage.git
 cd ullage/macos
-./scripts/build_app.sh        # build/Ullage.app üretir
+./scripts/build_app.sh
 open build/Ullage.app
 ```
 
-Xcode'un tamamı gerekmez, Command Line Tools (`xcode-select --install`) yeterlidir.
+Xcode'un tamamı gerekmez, `xcode-select --install` ile gelen komut satırı araçları yeter.
+
+## Bilgileri nereden alıyor?
+
+| Araç | Limit | Token |
+|---|---|---|
+| Claude | Anthropic'in kullanım bilgisi (Claude Code girişinle) | `~/.claude` klasörü |
+| Codex | `~/.codex` klasörü | aynı yer |
+| Antigravity | IDE açıkken yerel sunucusu | yerel konuşma kayıtları |
+| Gemini | Google kota bilgisi (Gemini CLI girişinle, lisans gerekir) | yok |
+
+Ek olarak:
+- Claude için Mac'in anahtar zinciri izin ister, **"Her Zaman İzin Ver"** de.
+- Codex kayıtlarını okumak için `brew install zstd` gerekir.
+- Gemini için Gemini CLI kurulu ve girişli olmalı (`npm i -g @google/gemini-cli`).
+
+Alınamayan ya da tahmini olan veriler Ayarlar > Sağlayıcılar sayfasında "Kesin / Tahmini / Veri yok" diye açıkça yazar. Olmayan veri uydurulmaz.
 
 ## Windows
 
-Windows sürümü [`windows/`](windows) klasöründe geliştirilecek. Henüz hazır değil.
-
-## Verileri nereden okur
-
-| Sağlayıcı | Limit | Token |
-|---|---|---|
-| Claude | Anthropic kullanım uç noktası (Claude Code oturumunla; Keychain izni ister, "Her Zaman İzin Ver" de) | `~/.claude` kayıtları |
-| Codex | `~/.codex` oturum kayıtları | aynı kayıtlar |
-| Antigravity | IDE açıkken yerel dil sunucusu | yerel konuşma veritabanı (alan eşlemesi tahmini) |
-| Gemini | Google Code Assist kota API'si (Gemini CLI oturumunla, lisans gerekir) | yok |
-
-Ek gereksinimler:
-- Codex kayıtları sıkıştırılmıştır: `brew install zstd`.
-- Gemini oturumunu yenilemek için Gemini CLI kurulu olmalı: `npm i -g @google/gemini-cli`.
-
-Veri alınamayan ya da tahmini olan her şey Ayarlar > Sağlayıcılar sayfasında açıkça "Kesin / Tahmini / Veri yok" etiketiyle gösterilir. Uydurma değer gösterilmez.
+Windows sürümü geliyor, çok yakında. Bkz. [`windows/`](windows).
 
 ## Notlar
 
-- Claude limit uç noktası resmi olmayan bir arayüzdür ve değişebilir.
-- Sağlayıcı logoları [lobehub/lobe-icons](https://github.com/lobehub/lobe-icons) paketinden alınmıştır; marka hakları sahiplerine aittir.
-- Bu proje Anthropic, OpenAI, Google ile bağlantılı değildir.
+- Claude'un limit bilgisi resmi olmayan bir yoldan alınıyor, ileride değişebilir.
+- Logolar [lobe-icons](https://github.com/lobehub/lobe-icons) paketinden. Marka hakları sahiplerine ait.
+- Bu proje Anthropic, OpenAI veya Google ile bağlantılı değil.
 
 ## Lisans
 

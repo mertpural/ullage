@@ -389,6 +389,9 @@ struct OverviewCard: View {
             if usage.rows.isEmpty {
                 Text("Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.").font(t.font(10)).foregroundStyle(t.sub)
             }
+            if let st = usage.staleSince {
+                Text("Eski değer: \(PopoverView.time.string(from: st)) (güncellenemedi)").font(t.font(10)).foregroundStyle(.orange)
+            }
         }
         .card(t)
     }
@@ -486,6 +489,9 @@ struct ProviderDetail: View {
                 Spacer()
             }
 
+            if let st = usage.staleSince {
+                Text("Eski değer: \(PopoverView.time.string(from: st)) (güncellenemedi)").font(t.font(10)).foregroundStyle(.orange)
+            }
             if usage.rows.isEmpty {
                 Text(usage.notes.first ?? "Veri alınamadı.")
                     .font(t.font(12)).foregroundStyle(t.sub)

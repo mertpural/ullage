@@ -13,8 +13,9 @@ enum ClaudeProvider {
 
         switch await ClaudeLimitAPI.fetch() {
         case .success(let r):
-            u.fiveHourLeft = r.fiveHourLeft
-            u.weeklyLeft = r.weeklyLeft
+            // Sıfırlanma saati geçmiş pencere yenilenmiştir: eski değer yerine %100 gösterilir.
+            u.fiveHourLeft = (r.fiveHourReset.map { $0 <= now } ?? false) ? 1 : r.fiveHourLeft
+            u.weeklyLeft = (r.weeklyReset.map { $0 <= now } ?? false) ? 1 : r.weeklyLeft
             u.fiveHourReset = r.fiveHourReset
             u.weeklyReset = r.weeklyReset
             let age = Date().timeIntervalSince(r.fetchedAt)
@@ -24,6 +25,7 @@ enum ClaudeProvider {
             } else {
                 let f = DateFormatter(); f.timeStyle = .short; f.dateStyle = age > 86400 ? .short : .none
                 u.limitConfidence = .estimate
+                u.staleSince = r.fetchedAt
                 u.notes.append("Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor (\(f.string(from: r.fetchedAt))); güncel olmayabilir.")
             }
         case .failure(let err):
@@ -97,7 +99,8 @@ enum ClaudeLimitAPI {
     nonisolated(unsafe) private static var token: (value: String, expires: Date?)?
     nonisolated(unsafe) private static var cached: (at: Date, result: Result<ClaudeLimits, LimitError>)?
 
-    nonisolated(unsafe) private static var backoffUntil = Date.distantPast
+    /// Hız sınırı bekleme süresi uygulama yeniden başlatılınca da korunur (her açılışta tekrar sınıra çarpmamak için).
+    nonisolated(unsafe) private static var backoffUntil = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "claudeBackoffUntil"))
 
     /// Elle yenilemede önbelleği atlar, ama 30 saniyeden sık sorgu yapılmaz (Anthropic hız sınırı).
     static func invalidate() {
@@ -146,7 +149,7 @@ enum ClaudeLimitAPI {
             cached = (Date(), result)
             return result
         case .failure(let e):
-            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(60, r)) }
+            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(60, r)); UserDefaults.standard.set(backoffUntil.timeIntervalSince1970, forKey: "claudeBackoffUntil") }
             else { cached = (Date().addingTimeInterval(-240), result) } // hata durumunda 1 dk sonra yeniden dene
             if let old = stored() { return .success(old) }
             return result
