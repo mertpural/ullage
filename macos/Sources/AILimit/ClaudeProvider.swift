@@ -102,10 +102,19 @@ enum ClaudeLimitAPI {
     /// Hız sınırı bekleme süresi uygulama yeniden başlatılınca da korunur (her açılışta tekrar sınıra çarpmamak için).
     nonisolated(unsafe) private static var backoffUntil = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "claudeBackoffUntil"))
 
+    /// Anthropic'e iki sorgu arasındaki en kısa süre. Uygulama kapanıp açılsa da korunur (son deneme zamanı saklanır).
+    private static let minInterval: TimeInterval = 600
+    private static let lastAttemptKey = "claudeLastAttempt"
+
     /// Elle yenilemede önbelleği atlar, ama 30 saniyeden sık sorgu yapılmaz (Anthropic hız sınırı).
     static func invalidate() {
         lock.lock(); defer { lock.unlock() }
-        if let c = cached, Date().timeIntervalSince(c.at) > 30 { cached = nil }
+        // Elle yenileme en sık 2 dakikada bir gerçek sorgu yapar.
+        let last = UserDefaults.standard.double(forKey: lastAttemptKey)
+        if Date().timeIntervalSince1970 - last > 120 {
+            cached = nil
+            UserDefaults.standard.set(0, forKey: lastAttemptKey)
+        }
     }
     private static let storeKey = "claudeLastLimits"
 
@@ -132,7 +141,7 @@ enum ClaudeLimitAPI {
     /// beklenir ve bu sürede son başarılı değer (yaşıyla birlikte) döndürülür.
     static func fetch() async -> Result<ClaudeLimits, LimitError> {
         lock.lock()
-        if let c = cached, Date().timeIntervalSince(c.at) < 300 { lock.unlock(); return c.result }
+        if let c = cached, Date().timeIntervalSince(c.at) < minInterval { lock.unlock(); return c.result }
         let waiting = Date() < backoffUntil
         lock.unlock()
 
@@ -140,6 +149,10 @@ enum ClaudeLimitAPI {
             if let old = stored() { return .success(old) }
             return .failure(LimitError(message: "Anthropic hız sınırı uyguladı; biraz sonra yeniden denenecek"))
         }
+
+        let sinceLast = Date().timeIntervalSince1970 - UserDefaults.standard.double(forKey: lastAttemptKey)
+        if sinceLast < minInterval, let old = stored() { return .success(old) }
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastAttemptKey)
 
         let result = await request(retryWithFreshToken: true)
         lock.lock(); defer { lock.unlock() }
@@ -149,8 +162,8 @@ enum ClaudeLimitAPI {
             cached = (Date(), result)
             return result
         case .failure(let e):
-            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(60, r)); UserDefaults.standard.set(backoffUntil.timeIntervalSince1970, forKey: "claudeBackoffUntil") }
-            else { cached = (Date().addingTimeInterval(-240), result) } // hata durumunda 1 dk sonra yeniden dene
+            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(900, r)); UserDefaults.standard.set(backoffUntil.timeIntervalSince1970, forKey: "claudeBackoffUntil") }
+            else { cached = (Date().addingTimeInterval(-minInterval + 120), result) } // hata durumunda 1 dk sonra yeniden dene
             if let old = stored() { return .success(old) }
             return result
         }

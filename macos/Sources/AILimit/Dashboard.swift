@@ -367,7 +367,7 @@ struct SyncPage: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Text("Kaynak başına sınırlar").font(t.font(13, .semibold))
-            Text("Claude limit yüzdesi: Anthropic hız sınırına takılmamak için ne seçersen seç en sık 5 dakikada bir sorgulanır. Elle yenilemede en sık 30 saniyede bir.")
+            Text("Claude limit yüzdesi: Anthropic hız sınırına takılmamak için ne seçersen seç en sık 10 dakikada bir sorgulanır (uygulamayı kapatıp açsan da). Elle yenilemede en sık 2 dakikada bir. Hız sınırına takılırsa 15 dakika beklenir.")
             Text("Gemini kotası: en sık 2 dakikada bir.")
             Text("Antigravity limiti: IDE açıksa her yenilemede yerel sunucudan okunur, kapalıysa okunamaz.")
             Text("Codex ve token geçmişi: yerel dosyalardan, her yenilemede.")
