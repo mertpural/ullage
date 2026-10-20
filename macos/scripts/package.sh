@@ -4,10 +4,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ./scripts/build_app.sh
-ditto -c -k --norsrc --noextattr --keepParent build/Ullage.app build/Ullage.zip
-echo "Hazır: build/Ullage.zip"
+ditto -c -k --norsrc --noextattr --keepParent build/Ullage.app build/release-mac.zip
+echo "Hazır: build/release-mac.zip (GitHub'a yüklerken Ullage.zip adıyla kopyalanır)"
 
-# Derleme klasöründe ikinci bir "Ullage.app" kalmasın (Spotlight'ta çift görünür): paketlendikten sonra .app uzantısı kaldırılır.
+# Derleme klasöründe "Ullage" adlı ikinci bir şey kalmasın (Spotlight'ta çift görünür): paketlendikten sonra klasör "stage" olur.
 # Çalıştırdığın uygulama, build_app.sh'ın güncellediği kökteki build/Ullage.app'tir.
-rm -rf build/Ullage-build
-mv build/Ullage.app build/Ullage-build
+rm -rf build/stage
+mv build/Ullage.app build/stage
