@@ -15,11 +15,11 @@ function windows(u) {
   return { five: five || null, week: week || null, other };
 }
 
-async function refreshAll(store, { force = false } = {}) {
+async function refreshAll(store, { force = false, refreshLogin = true } = {}) {
   if (force) claude.invalidate(store);
   const usage = {};
   const safe = async (name, fn, fallback) => { try { usage[name] = await fn(); } catch (e) { usage[name] = { limitConfidence: 'none', tokenConfidence: 'none', extra: [], notes: [`${fallback}: ${e.message}`] }; } };
-  await safe('claude', () => claude.read(store), 'Claude okunamadı');
+  await safe('claude', () => claude.read(store, { refreshLogin }), 'Claude okunamadı');
   await safe('codex', async () => codex.read(store), 'Codex okunamadı');
   await safe('antigravity', () => antigravity.read(store), 'Antigravity okunamadı');
   usage.gemini = { limitConfidence: 'none', tokenConfidence: 'none', extra: [], notes: ['Gemini Windows sürümünde henüz yok.'] };

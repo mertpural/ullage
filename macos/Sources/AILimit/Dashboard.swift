@@ -292,6 +292,9 @@ struct AutomationPage: View {
             Toggle("", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
                 .toggleStyle(.switch).labelsHidden()
         }
+        SettingRow(title: "Claude oturumunu otomatik yenile", subtitle: "Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.") {
+            Toggle("", isOn: $state.refreshLogin).toggleStyle(.switch).labelsHidden()
+        }
         SettingRow(title: "Claude pencere başlatıcı", subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.") {
             Toggle("", isOn: $state.starterOn).toggleStyle(.switch).labelsHidden()
         }

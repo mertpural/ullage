@@ -140,6 +140,10 @@ final class AppState: ObservableObject {
             if notificationsOn { Notifier.requestAuthorization() }
         }
     }
+    /// Claude Code oturumu bitmişse, Claude Code'a kendini yenilettir (aksi hâlde limit değeri eski kalır).
+    @Published var refreshLogin: Bool = UserDefaults.standard.object(forKey: "refreshLogin") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(refreshLogin, forKey: "refreshLogin") }
+    }
     @Published var starterOn: Bool = UserDefaults.standard.bool(forKey: "starterOn") {
         didSet { UserDefaults.standard.set(starterOn, forKey: "starterOn") }
     }

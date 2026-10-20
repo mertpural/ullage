@@ -128,7 +128,7 @@ async function doRefresh(force) {
   refreshing = true;
   try {
     const prev = state.usage;
-    const r = await refreshAll(store, { force });
+    const r = await refreshAll(store, { force, refreshLogin: settings.v.refreshLogin !== false });
     state = { ...state, ...r };
     if (Object.keys(prev).length) notify(prev, r.usage);
     await updateTray();

@@ -196,12 +196,44 @@ enum ClaudeLimitAPI {
         return .success(access)
     }
 
+    /// Claude Code'un oturum anahtarı süresi dolduğunda, onu Claude Code'un kendisine yeniletir: tek satırlık bir Haiku
+    /// isteği çalıştırır, Claude Code anahtarı kendi yenileyip Keychain'e yazar. Anahtarlara bu uygulama dokunmaz.
+    /// En sık 30 dakikada bir denenir; Ayarlar'dan kapatılabilir.
+    private static func refreshLoginViaCLI() async -> Bool {
+        let d = UserDefaults.standard
+        if d.object(forKey: "refreshLogin") as? Bool == false { return false }
+        if Date().timeIntervalSince1970 - d.double(forKey: "claudeLoginRefreshAt") < 1800 { return false }
+        d.set(Date().timeIntervalSince1970, forKey: "claudeLoginRefreshAt")
+        guard let cli = WindowStarter.cliPath else { return false }
+        return await withCheckedContinuation { cont in
+            DispatchQueue.global().async {
+                let p = Process()
+                p.executableURL = URL(fileURLWithPath: cli)
+                p.arguments = ["-p", "--model", "haiku", "--no-session-persistence", "--tools", "", "--", "Reply with only: ok"]
+                p.currentDirectoryURL = FileManager.default.temporaryDirectory
+                var env = ProcessInfo.processInfo.environment
+                env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+                p.environment = env
+                p.standardOutput = Pipe(); p.standardError = Pipe()
+                do { try p.run() } catch { cont.resume(returning: false); return }
+                let done = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async { p.waitUntilExit(); done.signal() }
+                if done.wait(timeout: .now() + 90) == .timedOut { p.terminate(); cont.resume(returning: false); return }
+                cont.resume(returning: p.terminationStatus == 0)
+            }
+        }
+    }
+
     private static func request(retryWithFreshToken: Bool) async -> Result<ClaudeLimits, LimitError> {
-        let tok: String
+        var tok: String
         switch loadToken(forceReload: !retryWithFreshToken) {
         case .success(let t): tok = t
         case .failure(let e): return .failure(e)
         }
+        // Süresi dolmuş oturum: anahtara dokunmadan, Claude Code'un kendisine yeniletilir.
+        lock.lock(); let exp = token?.expires; lock.unlock()
+        if let e = exp, e < Date().addingTimeInterval(120), await refreshLoginViaCLI(),
+           case .success(let fresh) = loadToken(forceReload: true) { tok = fresh }
         var req = URLRequest(url: URL(string: "https://api.anthropic.com/api/oauth/usage")!)
         req.timeoutInterval = 15
         req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
@@ -212,7 +244,10 @@ enum ClaudeLimitAPI {
             let (data, resp) = try await URLSession.shared.data(for: req)
             let code = (resp as? HTTPURLResponse)?.statusCode ?? 0
             if code == 401 {
-                if retryWithFreshToken { return await request(retryWithFreshToken: false) }
+                if retryWithFreshToken {
+                    _ = await refreshLoginViaCLI()
+                    return await request(retryWithFreshToken: false)
+                }
                 return .failure(LimitError(message: "Oturum süresi dolmuş; Claude Code'u açınca yenilenir"))
             }
             if code == 429 {

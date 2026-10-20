@@ -191,6 +191,7 @@
 
   function automationPage() {
     main.append(setting('Limit bildirimleri', 'Kalan %15 ve %5\'in altına inince, ayrıca limit yenilenince bildirim gönderir.', toggle(S.settings.notify, (v) => window.ullage.setSettings({ notify: v }))));
+    main.append(setting('Claude oturumunu otomatik yenile', 'Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code\'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.', toggle(S.settings.refreshLogin !== false, (v) => window.ullage.setSettings({ refreshLogin: v }))));
     main.append(setting('Girişte otomatik başlat', 'Bilgisayara giriş yapınca uygulama kendiliğinden açılır.', toggle(S.settings.login, (v) => window.ullage.setSettings({ login: v }))));
   }
 

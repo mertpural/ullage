@@ -8,6 +8,7 @@ const DEFAULTS = {
   tab: 'all',
   interval: 30,        // saniye; 0 = yalnızca elle
   notify: true,
+  refreshLogin: true,  // süresi dolan Claude Code oturumunu Claude Code'a yeniletir
   login: false,
   dashPage: 'usage',
 };
