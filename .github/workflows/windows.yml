@@ -1,0 +1,47 @@
+name: Windows build
+
+# Elle çalıştırılır: Actions > Windows build > Run workflow. Derlenen .exe dosyaları, verilen sürümün
+# (varsayılan v0.1.0) release'ine eklenir; böylece macOS ve Windows tek release sayfasında durur.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Dosyaların ekleneceği release etiketi"
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: windows/package-lock.json
+      - run: npm ci
+      - name: Testler
+        run: npm test
+      - name: Veri okuyucu duman testi
+        run: node scripts/dump.js
+      - name: Derle
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ullage-windows
+          path: |
+            windows/dist/Ullage-Setup.exe
+            windows/dist/Ullage-Portable.exe
+      - name: Release'e ekle
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.tag }}" dist/Ullage-Setup.exe dist/Ullage-Portable.exe --clobber --repo "${{ github.repository }}"

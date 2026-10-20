@@ -1,13 +1,15 @@
 # Ullage
 
-Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan gösteren küçük bir uygulama.
+Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan (Windows'ta sistem tepsisinden) gösteren küçük bir uygulama.
 5 saatlik ve haftalık limitini, harcadığın token'ı ve geçmiş kullanımını tek yerden görürsün.
 
 ## ⬇️ İndir
 
-**[Ullage.zip'i indir (macOS)](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip)**
+- **macOS:** [Ullage.zip](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip)
+- **Windows:** [Ullage-Setup.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe)
 
-İndirince zip'i aç, `Ullage.app`'i Uygulamalar klasörüne at, bitti.
+**Mac:** zip'i aç, `Ullage.app`'i Uygulamalar klasörüne at, bitti.
+**Windows:** `Ullage-Setup.exe`'ye çift tıkla, kurulur.
 
 > İlk açılışta Mac "tanınmayan geliştirici" diyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de, bir kere yeterli.
 
@@ -49,6 +51,31 @@ open build/Ullage.app
 ```
 
 Xcode'un tamamı gerekmez, `xcode-select --install` ile gelen komut satırı araçları yeter.
+
+## Bilgileri nereden alıyor?
+
+| Araç | Limit | Token |
+|---|---|---|
+| Claude | Anthropic'in kullanım bilgisi (Claude Code girişinle) | `~/.claude` klasörü |
+| Codex | `~/.codex` klasörü | aynı yer |
+| Antigravity | IDE açıkken yerel sunucusu | yerel konuşma kayıtları |
+| Gemini | Google kota bilgisi (Gemini CLI girişinle, lisans gerekir) | yok |
+
+Ek olarak:
+- Claude için Mac'in anahtar zinciri izin ister, **"Her Zaman İzin Ver"** de.
+- Codex kayıtlarını okumak için `brew install zstd` gerekir.
+- Gemini için Gemini CLI kurulu ve girişli olmalı (`npm i -g @google/gemini-cli`).
+
+Alınamayan ya da tahmini olan veriler Ayarlar > Sağlayıcılar sayfasında "Kesin / Tahmini / Veri yok" diye açıkça yazar. Olmayan veri uydurulmaz.
+
+## Windows
+
+Windows sürümü de var: tepsi simgesi, popover, Kullanım sayfası, temalar, hepsi aynı.
+
+**[Ullage-Setup.exe'yi indir (Windows)](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe)**
+(kurulum istemeyen için: [Ullage-Portable.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe))
+
+Ayrıntılar: [`windows/`](windows). İlk sürüm olduğu için Windows'ta henüz gerçek bir bilgisayarda denenmedi.
 
 ## Bilgileri nereden alıyor?
 

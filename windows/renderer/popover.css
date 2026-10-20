@@ -1,0 +1,39 @@
+body { width: 380px; padding: 16px; overflow: hidden; }
+#root { display: flex; flex-direction: column; gap: 12px; }
+.head { display: flex; justify-content: space-between; align-items: baseline; }
+.head h1 { font-size: 15px; font-weight: 800; }
+.head span { font-size: 10px; }
+.tabs { display: flex; gap: 6px; }
+.tabs .pill { padding: 6px 10px; }
+.tabs .ico { width: 16px; height: 16px; }
+.list { display: flex; flex-direction: column; gap: 10px; max-height: 470px; overflow: auto; }
+.list::-webkit-scrollbar { display: none; }
+.ov-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ov-head b { font-size: 14px; }
+.ov-head .grow { flex: 1; }
+.two { display: flex; gap: 14px; }
+.two > div { flex: 1; min-width: 0; }
+.metric .top { display: flex; justify-content: space-between; align-items: baseline; }
+.metric .top b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.metric .reset { font-size: 10px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.det-title { display: flex; align-items: center; gap: 8px; }
+.det-title .ico { width: 26px; height: 26px; }
+.det-title b { font-size: 17px; }
+.cards2 { display: flex; gap: 10px; }
+.cards2 .card { flex: 1; min-width: 0; }
+.mc .row { display: flex; justify-content: space-between; align-items: center; }
+.mc .big { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.mc .big small { font-size: 11px; font-weight: 400; color: var(--sub); margin-left: 4px; }
+.mc .foot { display: flex; justify-content: space-between; align-items: center; font-size: 10px; font-weight: 600; color: var(--sub); }
+.tok { display: flex; gap: 14px; align-items: flex-end; margin-top: 8px; }
+.tok .num { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.days { flex: 1; display: flex; gap: 4px; align-items: flex-end; height: 34px; }
+.days i { flex: 1; border-radius: 2px; opacity: .45; }
+.days i:last-child { opacity: 1; }
+.pools .lb { display: flex; justify-content: space-between; font-size: 11px; color: var(--sub); }
+.pools .lb b { color: var(--text); }
+.pools .bar { margin: 3px 0 9px; }
+.empty { font-size: 12px; color: var(--sub); }
+.stale { font-size: 10px; color: #ff9f0a; }
+.foot-bar { display: flex; gap: 8px; align-items: center; }
+.foot-bar .grow { flex: 1; }

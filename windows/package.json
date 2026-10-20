@@ -1,0 +1,53 @@
+{
+  "name": "ullage",
+  "version": "0.1.0",
+  "description": "Menü çubuğunda / sistem tepsisinde AI limit ve token takibi",
+  "main": "src/main/main.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dump": "node scripts/dump.js",
+    "dist": "electron-builder --win --x64",
+    "test": "node scripts/test.js"
+  },
+  "build": {
+    "appId": "com.ullage.app",
+    "productName": "Ullage",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/dist/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "Ullage-Setup.exe"
+    },
+    "portable": {
+      "artifactName": "Ullage-Portable.exe"
+    }
+  },
+  "dependencies": {
+    "fzstd": "^0.1.1",
+    "sql.js": "^1.15.1"
+  },
+  "devDependencies": {
+    "electron": "^44.9.1",
+    "electron-builder": "^26.15.3"
+  },
+  "author": "mertpural"
+}
