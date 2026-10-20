@@ -173,7 +173,7 @@ final class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(styleWeek.rawValue, forKey: "styleWeek") }
     }
     /// Arka plan yenileme aralığı (saniye). 0 = yalnızca elle.
-    @Published var refreshInterval: Int = UserDefaults.standard.object(forKey: "refreshInterval") as? Int ?? 60 {
+    @Published var refreshInterval: Int = UserDefaults.standard.object(forKey: "refreshInterval") as? Int ?? 30 {
         didSet {
             UserDefaults.standard.set(refreshInterval, forKey: "refreshInterval")
             restartTimer()

@@ -103,7 +103,7 @@ enum ClaudeLimitAPI {
     nonisolated(unsafe) private static var backoffUntil = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "claudeBackoffUntil"))
 
     /// Anthropic'e iki sorgu arasındaki en kısa süre. Uygulama kapanıp açılsa da korunur (son deneme zamanı saklanır).
-    private static let minInterval: TimeInterval = 600
+    private static let minInterval: TimeInterval = 60
     private static let lastAttemptKey = "claudeLastAttempt"
 
     /// Elle yenilemede önbelleği atlar, ama 30 saniyeden sık sorgu yapılmaz (Anthropic hız sınırı).
@@ -111,7 +111,7 @@ enum ClaudeLimitAPI {
         lock.lock(); defer { lock.unlock() }
         // Elle yenileme en sık 2 dakikada bir gerçek sorgu yapar.
         let last = UserDefaults.standard.double(forKey: lastAttemptKey)
-        if Date().timeIntervalSince1970 - last > 120 {
+        if Date().timeIntervalSince1970 - last > 30 {
             cached = nil
             UserDefaults.standard.set(0, forKey: lastAttemptKey)
         }
@@ -162,7 +162,7 @@ enum ClaudeLimitAPI {
             cached = (Date(), result)
             return result
         case .failure(let e):
-            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(900, r)); UserDefaults.standard.set(backoffUntil.timeIntervalSince1970, forKey: "claudeBackoffUntil") }
+            if let r = e.retryAfter { backoffUntil = Date().addingTimeInterval(max(300, r)); UserDefaults.standard.set(backoffUntil.timeIntervalSince1970, forKey: "claudeBackoffUntil") }
             else { cached = (Date().addingTimeInterval(-minInterval + 120), result) } // hata durumunda 1 dk sonra yeniden dene
             if let old = stored() { return .success(old) }
             return result

@@ -346,13 +346,13 @@ struct SyncPage: View {
     @EnvironmentObject var state: AppState
 
     private static let options: [(String, Int)] = [
-        ("30 saniye", 30), ("1 dakika", 60), ("2 dakika", 120), ("5 dakika", 300),
+        ("15 saniye", 15), ("30 saniye", 30), ("1 dakika", 60), ("2 dakika", 120), ("5 dakika", 300),
         ("10 dakika", 600), ("15 dakika", 900), ("Yalnızca elle", 0),
     ]
 
     var body: some View {
         let t = state.theme
-        SettingRow(title: "Otomatik yenileme", subtitle: "Verilerin arka planda ne sıklıkla okunacağı. Yerel kayıtlar (token geçmişi) her yenilemede okunur.") {
+        SettingRow(title: "Otomatik yenileme", subtitle: "Verilerin arka planda ne sıklıkla okunacağı. Yerel kayıtlar (token geçmişi, Codex, Antigravity) her yenilemede okunur, 15 saniye bile sorun olmaz.") {
             Picker("", selection: $state.refreshInterval) {
                 ForEach(Self.options, id: \.1) { Text($0.0).tag($0.1) }
             }
@@ -367,7 +367,7 @@ struct SyncPage: View {
 
         VStack(alignment: .leading, spacing: 8) {
             Text("Kaynak başına sınırlar").font(t.font(13, .semibold))
-            Text("Claude limit yüzdesi: Anthropic hız sınırına takılmamak için ne seçersen seç en sık 10 dakikada bir sorgulanır (uygulamayı kapatıp açsan da). Elle yenilemede en sık 2 dakikada bir. Hız sınırına takılırsa 15 dakika beklenir.")
+            Text("Claude limit yüzdesi: Anthropic'in kullanım bilgisi sınırlı olduğu için seçtiğin süre ne olursa olsun en sık 1 dakikada bir sorgulanır; hız sınırına takılırsa 5 dakika beklenir. Arada son alınan değer gösterilir, yenilenen pencereler hemen %100 olur.")
             Text("Gemini kotası: en sık 2 dakikada bir.")
             Text("Antigravity limiti: IDE açıksa her yenilemede yerel sunucudan okunur, kapalıysa okunamaz.")
             Text("Codex ve token geçmişi: yerel dosyalardan, her yenilemede.")
