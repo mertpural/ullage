@@ -39,3 +39,11 @@ EOF
 
 codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 echo "Hazır: $APP"
+
+# Eskiden derlemeler kökteki build/ klasörüne yazılıyordu. Orada kalan eski kopya açılmaya devam etmesin diye,
+# o klasör varsa yeni sürüm aynı yere de (üzerine yazarak) kopyalanır.
+LEGACY="../build/$APP_NAME.app"
+if [ -d "$LEGACY" ]; then
+  ditto "$APP" "$LEGACY"
+  echo "Eski konum da güncellendi: $LEGACY"
+fi
