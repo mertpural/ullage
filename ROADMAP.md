@@ -23,7 +23,6 @@ Benzer açık kaynak uygulamalar: CodexBar (steipete), ClaudeBar (tddworks). Aş
 - [ ] Hız göstergesi: bu tempoyla limit ne zaman biter
 - [ ] **Pencere başlatıcı** (opt-in): 5 saatlik limit sıfırlanınca, ya da sabah belirlenen saatte, en ucuz modele (Haiku) çok kısa bir mesaj atıp yeni pencereyi erken başlatır. Not: ek hak vermez, sadece pencerenin ne zaman başlayıp biteceğini kaydırır. Anthropic bunu resmi olarak belgelemiyor, topluluk bilgisi.
 - [ ] Oturum açılışında otomatik başlat
-- [ ] Web kullanımı (claude.ai, chatgpt.com): tarayıcı oturumuyla yüzde, token yok
 - [ ] Komut satırı aracı ve `ailimit://` URL şeması (betikler için)
 - [ ] Windows sürümü (Tauri ya da .NET, aynı ayrıştırma mantığıyla)
 
