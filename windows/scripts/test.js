@@ -93,6 +93,29 @@ assert.ok(statusline.state(slDir, slSettings).other);
 statusline.uninstall(slDir, slSettings);
 assert.strictEqual(JSON.parse(fs.readFileSync(slSettings, 'utf8')).statusLine.command, 'baska.cmd');
 
+// ---- claude komutunu bulma: PATH'te yoksa Claude Desktop'ın kendi claude.exe'si
+const claudebin = require('../src/main/claudebin');
+const cbRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-bin-'));
+const mk = (...p) => { const f = path.join(cbRoot, ...p); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, ''); return f; };
+assert.ok(claudebin.cmpVersion('2.1.10', '2.1.5') > 0 && claudebin.cmpVersion('2.1.5', '2.1.10') < 0 && claudebin.cmpVersion('2.1', '2.1.0') === 0); // sayısal, metin sırası değil
+const noPath = { PATH: path.join(cbRoot, 'bos'), PATHEXT: '.EXE;.CMD' };
+assert.strictEqual(claudebin.resolve({ ...noPath, APPDATA: path.join(cbRoot, 'a'), LOCALAPPDATA: path.join(cbRoot, 'l') }), null); // hiçbir yerde yok
+// Mağaza (MSIX) yolu: %LOCALAPPDATA%\Claude-Data\<paket>\claude-code\<sürüm>\<karma>\claude.exe, en yüksek sürüm seçilir
+mk('l', 'Claude-Data', 'claude_pkg', 'claude-code', '2.1.5', 'aaa', 'claude.exe');
+const newest = mk('l', 'Claude-Data', 'claude_pkg', 'claude-code', '2.1.10', 'bbb', 'claude.exe');
+assert.strictEqual(claudebin.desktopBundled({ ...noPath, LOCALAPPDATA: path.join(cbRoot, 'l') }), newest);
+// Klasik yol: %APPDATA%\Claude\claude-code\<sürüm>\claude.exe
+const roaming = mk('r', 'Claude', 'claude-code', '2.1.99', 'claude.exe');
+assert.strictEqual(claudebin.desktopBundled({ ...noPath, APPDATA: path.join(cbRoot, 'r', 'Claude', '..') , LOCALAPPDATA: path.join(cbRoot, 'yok') }), roaming);
+const found = claudebin.resolve({ ...noPath, LOCALAPPDATA: path.join(cbRoot, 'l') });
+assert.strictEqual(found.kind, 'desktop'); assert.strictEqual(found.file, newest); assert.strictEqual(found.shell, false);
+// PATH'te claude varsa o tercih edilir
+mk('bin', 'claude.cmd');
+assert.strictEqual(claudebin.resolve({ PATH: path.join(cbRoot, 'bin'), PATHEXT: '.EXE;.CMD', LOCALAPPDATA: path.join(cbRoot, 'l') }).kind, 'path');
+// komut satırı: kabukta boş değer ve boşluklu argüman tırnaklı, doğrudan çalıştırmada dizi olarak
+assert.strictEqual(claudebin.spec({ file: 'claude', shell: true }, ['-p', '.', '--tools', '', 'a b'])[0], 'claude -p "." --tools "" "a b"');
+assert.deepStrictEqual(claudebin.spec({ file: 'C:\\x y\\claude.exe', shell: false }, ['-p', ''])[1], ['-p', '']);
+
 // ---- ölçüm koşulları (maybeProbe): yalnızca yeni kullanım varsa, en sık 5 dakikada bir
 const claudeMod = require('../src/main/providers/claude');
 const pst = new Store(fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-probe-')));

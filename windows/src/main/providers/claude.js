@@ -8,6 +8,7 @@ const { execFileSync, execFile } = require('child_process');
 const { walk, request, isoMs } = require('../util');
 const statusline = require('../statusline');
 const cliprobe = require('../cliprobe');
+const claudebin = require('../claudebin');
 
 const STATUS_FRESH = 15 * 60 * 1000; // durum satırı dosyası bundan yeniyse ağa hiç gidilmez
 const BACKOFF_MIN = 5 * 60 * 1000;   // hız sınırına (429) çarpınca en az 5 dakika bekle
@@ -26,10 +27,12 @@ function refreshLoginViaCLI(store, enabled) {
   if (enabled === false) return Promise.resolve(false);
   const now = Date.now();
   if (now - (store.kv('claudeLoginRefreshAt') || 0) < 30 * 60 * 1000) return Promise.resolve(false);
+  const bin = claudebin.resolve(); // PATH'te yoksa Claude Desktop'ın kendi claude.exe'si
+  if (!bin) return Promise.resolve(false);
   store.kv('claudeLoginRefreshAt', now);
+  const [file, args, opts] = claudebin.spec(bin, ['-p', '--model', 'haiku', '--no-session-persistence', '--tools', '', '--', 'Reply with only: ok']);
   return new Promise((resolve) => {
-    execFile('claude', ['-p', '--model', 'haiku', '--no-session-persistence', '--tools', '', '--', 'Reply with only: ok'],
-      { timeout: 90000, windowsHide: true, shell: process.platform === 'win32', cwd: os.tmpdir() }, (err) => resolve(!err));
+    execFile(file, args, { ...opts, timeout: 90000, windowsHide: true, cwd: os.tmpdir() }, (err) => resolve(!err));
   });
 }
 
@@ -131,7 +134,8 @@ async function maybeProbe(store, result, now) {
   probing = true;
   try {
     store.kv('claudeLastProbe', now);
-    const { limits, seen } = await cliprobe.measure();
+    const { limits, seen, missing } = await cliprobe.measure();
+    if (missing) { store.kv('claudeLastProbe', lastProbe); return null; } // claude hiçbir yerde yok: sayaç harcanmasın
     if (!limits) { if (seen) store.kv('claudeProbeBlockedUntil', now + PROBE_BLOCK); return null; }
     const rec = { at: Date.now(), ...limits };
     store.kv('claudeLast', rec);

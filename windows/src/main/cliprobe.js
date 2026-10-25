@@ -5,9 +5,12 @@
 const os = require('os');
 const { spawn } = require('child_process');
 const { isoMs } = require('./util');
+const claudebin = require('./claudebin');
 
-// Windows'ta claude çoğunlukla bir .cmd dosyasıdır; bu yüzden komut bir kabuk üzerinden, boş "--tools" değeri tırnaklı çalıştırılır.
-const COMMAND = 'claude -p "." --model haiku --output-format stream-json --verbose --no-session-persistence --tools "" --strict-mcp-config --disable-slash-commands';
+const ARGS = ['-p', '.', '--model', 'haiku', '--output-format', 'stream-json', '--verbose', '--no-session-persistence', '--tools', '', '--strict-mcp-config', '--disable-slash-commands'];
+
+const spawnSpec = (bin) => claudebin.spec(bin, ARGS);
+const COMMAND = spawnSpec({ file: 'claude', shell: true })[0];
 
 const toMs = (r) => (typeof r === 'number' ? (r > 1e11 ? r : r * 1000) : typeof r === 'string' ? isoMs(r) : null);
 
@@ -45,13 +48,16 @@ function parseOutput(text) {
   return { seen, limits };
 }
 
-/** Komutu çalıştırır (cwd: geçici klasör, stdin kapalı, pencere yok) ve çıktıyı ayrıştırır. Hata ya da zaman aşımında { seen: false, limits: null }. */
-function measure({ timeoutMs = 60000 } = {}) {
+/** Komutu çalıştırır (cwd: geçici klasör, stdin kapalı, pencere yok) ve çıktıyı ayrıştırır. Hata ya da zaman aşımında { seen: false, limits: null }.
+ *  `claude` hiçbir yerde bulunamazsa (PATH'te de Claude Desktop içinde de yok) hiçbir şey çalıştırılmaz ve { missing: true } döner. */
+function measure({ timeoutMs = 60000, bin = claudebin.resolve() } = {}) {
+  if (!bin) return Promise.resolve({ seen: false, limits: null, missing: true });
   return new Promise((resolve) => {
     let out = '', done = false;
     const finish = (r) => { if (!done) { done = true; clearTimeout(timer); resolve(r); } };
     let child;
-    try { child = spawn(COMMAND, { shell: true, cwd: os.tmpdir(), stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }); } catch { return resolve({ seen: false, limits: null }); }
+    const [file, args, opts] = spawnSpec(bin);
+    try { child = spawn(file, args, { ...opts, cwd: os.tmpdir(), stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true }); } catch { return resolve({ seen: false, limits: null }); }
     const timer = setTimeout(() => { try { child.kill(); } catch { /* yoksay */ } finish({ seen: false, limits: null }); }, timeoutMs);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (d) => { out += d; if (out.length > 20 * 1024 * 1024) out = out.slice(-5 * 1024 * 1024); });
@@ -60,4 +66,4 @@ function measure({ timeoutMs = 60000 } = {}) {
   });
 }
 
-module.exports = { measure, parseOutput, limitsFromInfo, COMMAND };
+module.exports = { measure, parseOutput, limitsFromInfo, spawnSpec, COMMAND };
