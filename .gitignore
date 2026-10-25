@@ -5,3 +5,4 @@ build/
 **/Resources/icon_1024.png
 node_modules/
 dist/
+site-claude-design/

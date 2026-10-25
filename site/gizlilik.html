@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik: Ullage</title>
+<meta name="description" content="Ullage hangi bilgileri okur, nereye bağlanır, neleri hiç göndermez.">
+<meta name="theme-color" content="#0b0d14">
+<link rel="icon" href="img/ullage-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0b0d14; --text:#e9ebf1; --dim:#a3a8b8; --faint:#7c8193; --accent:#5fd6c4; --accent:oklch(0.82 0.12 180);
+  --serif:"Instrument Serif",Georgia,serif; --sans:Geist,system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"Geist Mono",ui-monospace,Menlo,monospace; }
+* { box-sizing: border-box; }
+html, body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); text-underline-offset:3px; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:6px; }
+.wrap { max-width:760px; margin:0 auto; padding:0 24px; }
+header { padding:28px 0; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.brand { display:flex; align-items:center; gap:10px; color:var(--text); text-decoration:none; font-weight:500; }
+.brand img { width:30px; height:30px; border-radius:7px; }
+.lang { display:flex; border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:3px; font-family:var(--mono); font-size:11px; }
+.lang button { appearance:none; border:0; background:transparent; color:var(--dim); cursor:pointer; padding:4px 9px; border-radius:999px; font:inherit; }
+.lang button[aria-pressed="true"] { background:var(--text); color:var(--bg); }
+h1 { font-family:var(--serif); font-weight:400; font-size:clamp(44px,7vw,72px); line-height:1; letter-spacing:-.02em; margin:24px 0 12px; }
+h2 { font-size:19px; font-weight:500; margin:40px 0 8px; }
+p, li { color:var(--dim); font-size:16px; line-height:1.65; }
+ul { padding-left:1.2em; }
+.updated { font-family:var(--mono); font-size:12px; color:var(--faint); }
+footer { border-top:1px solid rgba(255,255,255,.08); margin-top:64px; padding:24px 0 48px; font-size:13px; color:var(--faint); }
+[lang-only] { display:none; }
+html[lang="tr"] [lang-only="tr"], html[lang="en"] [lang-only="en"] { display:block; }
+html[lang="tr"] li[lang-only="tr"], html[lang="en"] li[lang-only="en"] { display:list-item; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="index.html"><img src="img/ullage-icon.png" alt="" width="30" height="30">Ullage</a>
+    <div class="lang" role="group" aria-label="Dil / Language">
+      <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <div lang-only="tr">
+      <h1>Gizlilik</h1>
+      <p class="updated">Sürüm 0.2.0 için geçerlidir.</p>
+      <p>Ullage, bilgisayarında çalışan bir uygulamadır. Veriyi bilgisayarından çıkarıp bize ya da bir üçüncü tarafa göndermez. Hesap açtırmaz, kullanım istatistiği toplamaz, reklam ya da izleyici içermez.</p>
+
+      <h2>Neleri okur?</h2>
+      <ul>
+        <li>Claude Code ve Claude uygulamasının kayıt dosyalarından (<code>~/.claude</code>) yalnızca kullanım sayılarını: token miktarı, model, zaman ve proje klasörünün <em>adı</em>. Sohbet içeriğini kaydetmez.</li>
+        <li>Codex ve Antigravity'nin kendi kayıt ve veritabanı dosyalarından aynı türden sayıları.</li>
+        <li>Claude Code'un bilgisayarında kayıtlı oturum bilgisini (macOS'ta Anahtar Zinciri, Windows'ta <code>.credentials.json</code>). Bu bilgi yalnızca aşağıdaki limit sorgusu için kullanılır, hiçbir yere kaydedilmez ya da gönderilmez.</li>
+      </ul>
+      <p>Okunan sayılar ve geçmiş, yalnızca senin bilgisayarında bir veri dosyasında (macOS: <code>~/Library/Application Support/AILimit</code>) tutulur. Uygulamayı silince geçmişi de silebilirsin.</p>
+
+      <h2>Nereye bağlanır?</h2>
+      <ul>
+        <li><b>Anthropic:</b> Kalan limitini öğrenmek için, senin kendi oturumunla, Anthropic'in kullanım bilgisini sorgular. Ayrıca limit alınamazsa, Claude Code komutu aracılığıyla tek satırlık küçük bir istek gönderip limitini ölçebilir (Ayarlar'dan kapatılabilir). Bu istekler doğrudan Anthropic'e gider, bize uğramaz.</li>
+        <li><b>Google (isteğe bağlı):</b> Gemini CLI girişin varsa, kota bilgisi için Google'ın kendi servisine bağlanır.</li>
+        <li><b>Yerel sunucular:</b> Antigravity'nin limitini, bilgisayarında çalışan kendi yerel sunucusundan okur.</li>
+      </ul>
+      <p>Ullage'in kendi sunucusu yoktur. Bu sitede bir sayaç ya da analiz aracı kullanmıyoruz; yalnızca yazı tipleri Google Fonts'tan yüklenir, bu yüzden Google bu sayfayı açtığında IP adresini görür.</p>
+
+      <h2>Güncelleme kontrolü</h2>
+      <p>Şu an uygulama kendiliğinden güncelleme kontrolü yapmıyor. İleride eklenirse yalnızca sürüm numarasına bakan küçük bir istek olur ve burada duyurulur.</p>
+
+      <h2>Sorular</h2>
+      <p>Bir sorun ya da sorunuz varsa <a href="https://github.com/mertpural/ullage/issues">GitHub'da bildirebilirsin</a>.</p>
+    </div>
+
+    <div lang-only="en">
+      <h1>Privacy</h1>
+      <p class="updated">Applies to version 0.2.0.</p>
+      <p>Ullage is an app that runs on your computer. It does not send your data off your machine, neither to us nor to any third party. It needs no account, collects no usage statistics and contains no ads or trackers.</p>
+
+      <h2>What does it read?</h2>
+      <ul>
+        <li>From the log files of Claude Code and the Claude app (<code>~/.claude</code>), only usage numbers: token counts, model, time and the <em>name</em> of the project folder. It does not store chat content.</li>
+        <li>The same kind of numbers from Codex and Antigravity's own log and database files.</li>
+        <li>The sign-in Claude Code keeps on your computer (Keychain on macOS, <code>.credentials.json</code> on Windows). It is used only for the limit request below and is never saved or sent anywhere else.</li>
+      </ul>
+      <p>The numbers and history are kept only on your computer in a data file (macOS: <code>~/Library/Application Support/AILimit</code>). You can delete it when you remove the app.</p>
+
+      <h2>Where does it connect?</h2>
+      <ul>
+        <li><b>Anthropic:</b> To find your remaining limit it queries Anthropic's usage information with your own session. If that fails it can also send one tiny request through the Claude Code command to measure the limit (can be turned off in Settings). These requests go straight to Anthropic, not through us.</li>
+        <li><b>Google (optional):</b> If you are signed in to the Gemini CLI it connects to Google's own service for quota information.</li>
+        <li><b>Local servers:</b> It reads Antigravity's limit from that app's own local server on your computer.</li>
+      </ul>
+      <p>Ullage has no server of its own. This site uses no counter or analytics; only the fonts load from Google Fonts, so Google sees your IP address when you open this page.</p>
+
+      <h2>Update checks</h2>
+      <p>The app does not check for updates by itself today. If that is added later it will be a small request that only looks at a version number, and it will be announced here.</p>
+
+      <h2>Questions</h2>
+      <p>If you have a problem or a question you can <a href="https://github.com/mertpural/ullage/issues">report it on GitHub</a>.</p>
+    </div>
+  </main>
+
+  <footer>© 2026 Ullage · <a href="index.html" data-back>Ana sayfa</a></footer>
+</div>
+<script>
+(function () {
+  var lang = 'tr';
+  try { var s = localStorage.getItem('ullage-lang'); if (s === 'tr' || s === 'en') lang = s; else if ((navigator.language || '').toLowerCase().indexOf('tr') !== 0) lang = 'en'; } catch (e) {}
+  function set(l) {
+    lang = l; document.documentElement.lang = l;
+    document.title = l === 'tr' ? 'Gizlilik: Ullage' : 'Privacy: Ullage';
+    document.querySelector('[data-back]').textContent = l === 'tr' ? 'Ana sayfa' : 'Home';
+    document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === l)); });
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) {
+    b.addEventListener('click', function () { set(b.getAttribute('data-lang')); try { localStorage.setItem('ullage-lang', b.getAttribute('data-lang')); } catch (e) {} });
+  });
+  set(lang);
+})();
+</script>
+</body>
+</html>
