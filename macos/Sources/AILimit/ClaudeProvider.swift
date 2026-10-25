@@ -103,6 +103,7 @@ struct ClaudeLimits {
 enum ClaudeLimitAPI {
     private static let lock = NSLock()
     nonisolated(unsafe) private static var token: (value: String, expires: Date?)?
+    nonisolated(unsafe) private static var keychainRetryAt = Date.distantPast
     nonisolated(unsafe) private static var cached: (at: Date, result: Result<ClaudeLimits, LimitError>)?
 
     /// Hız sınırı bekleme süresi uygulama yeniden başlatılınca da korunur (her açılışta tekrar sınıra çarpmamak için).
@@ -180,6 +181,12 @@ enum ClaudeLimitAPI {
         if !forceReload, let t = token, (t.expires ?? .distantFuture) > Date().addingTimeInterval(30) {
             lock.unlock(); return .success(t.value)
         }
+        // Keychain okuması reddedildiyse (izin penceresi kapatıldı ya da "İzin verme" seçildi) 15 dakika yeniden sorulmaz;
+        // aksi hâlde uyku sonrası her yenilemede izin penceresi tekrar çıkar.
+        if Date() < keychainRetryAt {
+            lock.unlock()
+            return .failure(LimitError(message: L.t("Claude Code oturumu Keychain'de bulunamadı ya da erişim reddedildi")))
+        }
         lock.unlock()
 
         let p = Process()
@@ -195,7 +202,10 @@ enum ClaudeLimitAPI {
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let oauth = obj["claudeAiOauth"] as? [String: Any],
               let access = oauth["accessToken"] as? String
-        else { return .failure(LimitError(message: L.t("Claude Code oturumu Keychain'de bulunamadı ya da erişim reddedildi"))) }
+        else {
+            lock.lock(); keychainRetryAt = Date().addingTimeInterval(900); lock.unlock()
+            return .failure(LimitError(message: L.t("Claude Code oturumu Keychain'de bulunamadı ya da erişim reddedildi")))
+        }
 
         let expires = (oauth["expiresAt"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
         lock.lock(); token = (access, expires); lock.unlock()
