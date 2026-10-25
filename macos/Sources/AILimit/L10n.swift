@@ -58,6 +58,8 @@ enum L {
         "Kota yanıtı %lld döndürdü%@": "The quota response returned %lld%@",
         "Son senkron: %@": "Last sync: %@", " Sonraki otomatik mesaj: %@.": " Next auto-message: %@.",
         "%lld gün": "%lld days", "%lld aktif gün": "%lld active days", "%@ · kullanım yok": "%@ · no usage", "%@ · %@ token · %@": "%@ · %@ tokens · %@",
+        "Anthropic bu hesaba geçici bir hız sınırı koydu. %@ sonrasında kendiliğinden düzelir, bir şey yapmana gerek yok. Uygulamayı o zamana kadar yeniden başlatma.":
+            "Anthropic has temporarily rate-limited this account. It fixes itself after %@; you don't need to do anything. Don't restart the app until then.",
         // Sayfa adları
         "Kullanım": "Usage", "Sağlayıcılar": "Providers", "Senkronizasyon": "Sync", "Menü çubuğu": "Menu bar",
         "Görünüm": "Appearance", "Bildirim ve otomasyon": "Notifications & automation", "Hakkında": "About",

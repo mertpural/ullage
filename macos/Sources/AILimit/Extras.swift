@@ -184,7 +184,9 @@ struct SetupCheck {
             Item(ok: WindowStarter.cliPath != nil || exists(".claude"), title: L.t("Claude Code kurulu"),
                  hint: "Terminalde `claude` komutunu bir kez çalıştırıp giriş yap. Ullage limiti oradaki oturumdan okur."),
             Item(ok: claude?.limitConfidence == .exact, title: L.t("Claude limiti okunuyor"),
-                 hint: "Claude Code'a giriş yapılı değilse ya da oturum bittiyse limit görünmez. Terminalde `claude` çalıştır, gerekirse /login yaz."),
+                 hint: ClaudeLimitAPI.backoffEnd.map {
+                     L.f("Anthropic bu hesaba geçici bir hız sınırı koydu. %@ sonrasında kendiliğinden düzelir, bir şey yapmana gerek yok. Uygulamayı o zamana kadar yeniden başlatma.", AppState.whenText($0))
+                 } ?? "Claude Code'a giriş yapılı değilse ya da oturum bittiyse limit görünmez. Terminalde `claude` çalıştır, gerekirse /login yaz."),
             Item(ok: exists(".codex/sessions"), title: L.t("Codex kullanımı bulundu"),
                  hint: "Codex'i hiç kullanmadıysan bu normal. Kullanınca kendiliğinden görünür."),
             Item(ok: codex?.limitConfidence == .exact, title: L.t("Codex limiti okunuyor"),
@@ -210,7 +212,7 @@ struct SetupCheckCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(it.title).font(t.font(12, .semibold))
                         if !it.ok {
-                            Text(it.hint).font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
+                            Text(L.t(it.hint)).font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
