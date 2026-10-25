@@ -127,6 +127,11 @@ async function drawTray(spec) {
 
 const drawIcon = (text, color) => drawTray({ kind: 'number', text, color });
 
+// Logo modu: tepsi simgesi veri göstermez, yalnızca uygulamanın logosu görünür (veri widget'ta ve pencerede).
+let logo = null;
+const logoImage = () => logo || (logo = nativeImage.createFromPath(path.join(__dirname, '..', '..', 'assets', 'icon.png')).resize({ width: 32, height: 32 }));
+const logoMode = () => process.platform !== 'darwin' && settings.v.trayStyle === 'logo';
+
 const statusColor = (l) => (l > 0.4 ? '#22a559' : l > 0.15 ? '#d98200' : '#d93025');
 const NAMES = { claude: 'Claude', codex: 'Codex', gemini: 'Gemini', antigravity: 'Antigravity' };
 
@@ -145,8 +150,9 @@ async function updateTray() {
     if (w.week && (!week || w.week.left < week.left)) week = w.week;
     for (const r of [w.five, w.week, ...w.other]) if (r && (tightest === null || r.left < tightest)) tightest = r.left;
   }
-  tray.setToolTip(lines.length ? lines.join('\n') : 'Ullage');
+  tray.setToolTip(lines.length && !logoMode() ? lines.join('\n') : 'Ullage');
   if (process.platform === 'darwin') { tray.setTitle(parts.join('   ')); return; }
+  if (logoMode()) { tray.setImage(logoImage()); return; }
   // Tepsi simgesi: 5 saatlik ve haftalık en kısıtlayıcı değerler, her ikisi de yoksa tek sayı.
   if (settings.v.trayStyle !== 'number' && (five || week)) {
     const bars = [];
@@ -232,11 +238,13 @@ app.whenReady().then(async () => {
   store = new Store(dir); settings = new Settings(dir);
   makePopover();
   tray = new Tray(nativeImage.createEmpty());
-  if (process.platform !== 'darwin') tray.setImage(await drawIcon('…', '#6e6e73'));
+  if (process.platform !== 'darwin') tray.setImage(logoMode() ? logoImage() : await drawIcon('…', '#6e6e73'));
   tray.setToolTip('Ullage');
-  tray.on('click', togglePopover);
+  // Logo modunda tepsi simgesine basınca uygulama penceresi açılır; hızlı görünüm sağ tık menüsünde.
+  tray.on('click', () => (logoMode() ? openDashboard('usage') : togglePopover()));
   tray.on('right-click', () => tray.popUpContextMenu(Menu.buildFromTemplate([
     { label: 'Kullanım', click: () => openDashboard('usage') }, { label: 'Ayarlar', click: () => openDashboard('providers') },
+    { label: 'Hızlı görünüm', click: togglePopover },
     { label: 'Yenile', click: () => doRefresh(true) },
     { label: 'Yüzen widget', type: 'checkbox', checked: !!settings.v.widget, click: (item) => { settings.patch({ widget: item.checked }); syncWidget(); } },
     { type: 'separator' }, { label: 'Çıkış', click: () => app.quit() },

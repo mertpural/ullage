@@ -11,7 +11,7 @@ const DEFAULTS = {
   refreshLogin: true,  // süresi dolan Claude Code oturumunu Claude Code'a yeniletir
   login: false,
   dashPage: 'usage',
-  trayStyle: 'bars',   // Windows tepsisi: 'bars' (5s ve haftalık çubukları) | 'number' (tek sayı, en düşük)
+  trayStyle: 'logo',   // Windows tepsisi: 'logo' (veri yok, uygulama logosu) | 'bars' (5s ve haftalık çubukları) | 'number' (tek sayı, en düşük)
   widget: false,       // her zaman üstte küçük yüzen pencere
   widgetPos: null,     // { x, y } son konum
 };

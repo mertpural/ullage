@@ -188,9 +188,9 @@
     }
     main.append(grid);
     const sel = el('select');
-    for (const [v, l] of [['bars', '5s ve haftalık çubuklar'], ['number', 'Tek sayı (en düşük kalan)']]) { const o = el('option', null, l); o.value = v; if (v === (S.settings.trayStyle || 'bars')) o.selected = true; sel.append(o); }
+    for (const [v, l] of [['logo', 'Uygulama logosu'], ['bars', '5s ve haftalık çubuklar'], ['number', 'Tek sayı (en düşük kalan)']]) { const o = el('option', null, l); o.value = v; if (v === (S.settings.trayStyle || 'logo')) o.selected = true; sel.append(o); }
     sel.onchange = () => window.ullage.setSettings({ trayStyle: sel.value });
-    main.append(setting('Tepsi simgesi', 'Windows tepsisinde ne gösterilsin. Çubuklar, 5 saatlik ve haftalık limiti ayrı gösterir; sayılar için tepsi ipucunun üzerine gel ya da widget\'ı aç.', sel));
+    main.append(setting('Tepsi simgesi', 'Windows tepsisinde ne gösterilsin. Logo seçiliyken simge veri göstermez, basınca uygulama açılır; limitler yüzen widget\'ta görünür. Çubuklar ve tek sayı seçeneklerinde simgeye basınca hızlı görünüm açılır.', sel));
     main.append(setting('Yüzen widget', 'Limitleri ekranda her zaman üstte duran küçük bir pencere olarak gösterir. Sürükleyerek yerini değiştirebilirsin.', toggle(S.settings.widget, (v) => window.ullage.setSettings({ widget: v }))));
   }
 

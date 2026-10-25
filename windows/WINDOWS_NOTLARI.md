@@ -6,7 +6,7 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 ## Yapılanlar
 - Claude giriş durumu dört ayrı durum olarak tanınıyor: dosya yok, giriş yok (yalnızca MCP), süresi dolmuş, tamam. Popover'da her biri için açık mesaj, "Komutu kopyala" ve "Girişi kontrol et" düğmeleri var.
 - Claude kartında cache okuma token'ı ayrı satır olarak gösteriliyor (toplam değişmedi).
-- Tepsi simgesi: varsayılan olarak 5 saatlik ve haftalık en düşük kalan limit iki çubuk olarak çiziliyor, etiketler büyütüldü ve dış çizgili. "Tek sayı" modu seçenek olarak duruyor.
+- Tepsi simgesi varsayılan olarak uygulamanın logosu: veri göstermiyor, ipucunda da yalnızca "Ullage" yazıyor. Simgeye basınca uygulama penceresi (Kullanım) açılıyor; hızlı görünüm sağ tık menüsünde. Limitler yüzen widget'ta. Ayarlar > Görünüm'den "5s ve haftalık çubuklar" (etiketler büyütüldü, dış çizgili) ve "Tek sayı" seçenekleri de seçilebilir; bu ikisinde simgeye basınca hızlı görünüm açılır.
 - Yüzen widget: şeffaf arka planlı yuvarlak kart, her zaman üstte, odak almaz, görev çubuğunda görünmez, sürüklenince konumu kaydedilir. İlk açılışta ekranın sağ üstünde başlar. Ayarlar > Görünüm'den ya da tepsi menüsünden açılıp kapanır.
 - Widget'ın arkasındaki dikdörtgen ton farkı giderildi: gölge pencere kenarında kesiliyordu, boşluk genişletildi ve gölge küçültüldü. Widget'ta Claude girişi yoksa ne yapılacağı yazıyor.
 - `settings.json` UTF-8 BOM'lu yazılırsa artık sessizce sıfırlanmıyor.
@@ -17,6 +17,8 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 - Codex açıkken tepsi çubukları doğru çiziliyor (yakınlaştırılmış görüntüde etiketler okunuyor).
 - Widget şeffaf kart olarak görünüyor (köşelerde arka plan duruyor). Fareyle sürüklenince x ve y konumu ayarlara kaydediliyor.
 - Giriş durumu ve cache okuma için birim testleri geçiyor.
+
+- Logo modunda tepsi simgesi gizli simgelerde logo olarak görünüyor ve UI Automation ile basınca dashboard penceresi açıldı.
 
 ## Henüz denenmedi
 - Claude limiti: bu bilgisayarda Claude Code'a `/login` ile giriş yapılmadığı için gerçek limit verisi görülmedi.
