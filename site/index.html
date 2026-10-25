@@ -231,7 +231,7 @@ footer a:hover { color: var(--text); }
     <div class="platforms">
       <article class="plat" id="mac" data-reveal>
         <h3>macOS</h3>
-        <a class="btn primary" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip"><span data-i="dlMacZip">Ullage.zip indir</span> <span aria-hidden="true">↓</span></a>
+        <a class="btn primary" href="downloads/Ullage.zip" download><span data-i="dlMacZip">Ullage.zip indir</span> <span aria-hidden="true">↓</span></a>
         <ul class="specs">
           <li><span data-i="sVer">Sürüm</span><span>0.2.0</span></li>
           <li><span data-i="sSize">Boyut</span><span>2,8 MB</span></li>
@@ -244,8 +244,8 @@ footer a:hover { color: var(--text); }
 
       <article class="plat" id="windows" data-reveal>
         <h3>Windows</h3>
-        <a class="btn primary" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe"><span data-i="dlWinExe">Ullage-Setup.exe indir</span> <span aria-hidden="true">↓</span></a>
-        <p class="alt"><span data-i="altText">Kurulum istemiyorsan:</span> <a href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe">Ullage-Portable.exe</a> <span data-i="altNote">(çift tıkla çalışır, kendini güncellemez).</span></p>
+        <a class="btn primary" data-link="winSetup" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe"><span data-i="dlWinExe">Ullage-Setup.exe indir</span> <span aria-hidden="true">↓</span></a>
+        <p class="alt"><span data-i="altText">Kurulum istemiyorsan:</span> <a data-link="winPortable" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe">Ullage-Portable.exe</a> <span data-i="altNote">(çift tıkla çalışır, kendini güncellemez).</span></p>
         <ul class="specs">
           <li><span data-i="sVer">Sürüm</span><span>0.2.0</span></li>
           <li><span data-i="sSize">Boyut</span><span>124 MB</span></li>
@@ -274,6 +274,14 @@ footer a:hover { color: var(--text); }
 
 <script>
 (function () {
+  // Windows dosyaları 124 MB: Vercel, Netlify, Cloudflare Pages gibi ücretsiz sitelere sığmaz.
+  // Dosyaları büyük dosya kabul eden bir yere koyup (Drive, GitHub Releases, kendi sunucun) adreslerini buraya yaz.
+  var LINKS = {
+    winSetup: 'https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe',
+    winPortable: 'https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe'
+  };
+  document.querySelectorAll('[data-link]').forEach(function (a) { var u = LINKS[a.getAttribute('data-link')]; if (u) a.setAttribute('href', u); });
+
   var COPY = {
     tr: {
       navHow: 'Nasıl çalışır', navFeat: 'Özellikler', navDl: 'İndir',
