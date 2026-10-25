@@ -16,6 +16,25 @@
   const providerName = (id) => PROVIDERS.find((p) => p.id === id).name;
   const providerColor = (id) => PROVIDERS.find((p) => p.id === id).color;
 
+  // Claude girişi yoksa ya da süresi dolmuşsa, boş kart yerine ne yapılacağını söyle.
+  const LOGIN_HINT = {
+    'signed-out': 'Claude Code girişi yok. Terminalde claude yaz, sonra /login ile giriş yap.',
+    'no-file': 'Claude Code kurulu değil ya da hiç giriş yapılmamış. Terminalde claude yazıp /login yap.',
+    expired: 'Claude Code oturumunun süresi dolmuş. Claude Code\'u açınca kendiliğinden yenilenir.',
+  };
+
+  function loginHelp(u) {
+    const box = el('div', 'login-help');
+    box.append(el('div', 'empty', LOGIN_HINT[u.loginState]));
+    const row = el('div', 'login-actions');
+    const copy = el('button', 'pill', 'Komutu kopyala');
+    copy.onclick = () => { window.ullage.copyText('claude'); copy.textContent = 'Kopyalandı'; };
+    const check = el('button', 'pill', 'Girişi kontrol et');
+    check.onclick = () => window.ullage.refresh(true);
+    row.append(copy, check); box.append(row);
+    return box;
+  }
+
   function metric(title, row, windowMs) {
     const m = el('div', 'metric');
     const top = el('div', 'top'); top.append(el('span', 'caps', title), el('b', null, Math.round(row.left * 100) + '%'));
@@ -38,7 +57,7 @@
       c.append(two);
     }
     for (const r of w.other) c.append(metric(r.title.replace(' · günlük kota', '').toUpperCase(), r, 86400e3));
-    if (!w.five && !w.week && !w.other.length) c.append(el('div', 'empty', 'Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.'));
+    if (!w.five && !w.week && !w.other.length) c.append(LOGIN_HINT[u.loginState] ? el('div', 'empty', LOGIN_HINT[u.loginState]) : el('div', 'empty', 'Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.'));
     if (u.staleSince) c.append(el('div', 'stale', `Eski değer: ${timeHM(u.staleSince)} (güncellenemedi)`));
     return c;
   }
@@ -64,8 +83,9 @@
     const t = el('div', 'det-title'); t.append(icon(p, 26), el('b', null, providerName(p))); box.append(t);
     if (u.staleSince) box.append(el('div', 'stale', `Eski değer: ${timeHM(u.staleSince)} (güncellenemedi)`));
     if (!w.five && !w.week && !w.other.length && !(u.extra || []).length) {
-      const c = el('div', 'card empty', u.notes[0] || 'Veri alınamadı.'); box.append(c);
-    }
+      if (LOGIN_HINT[u.loginState]) { const c = el('div', 'card'); c.append(loginHelp(u)); box.append(c); }
+      else box.append(el('div', 'card empty', u.notes[0] || 'Veri alınamadı.'));
+    } else if (LOGIN_HINT[u.loginState]) box.append(loginHelp(u));
     if (w.five || w.week) {
       const two = el('div', 'cards2');
       if (w.five) two.append(metricCard('5 SAATLİK', '⚡', w.five, 5 * 3600e3));
@@ -85,7 +105,8 @@
       const c = el('div', 'card');
       const head = el('div', 'ov-head'); head.style.marginBottom = '0';
       head.append(el('span', 'caps', 'TOKEN'), el('span', 'grow'), el('span', 'sub', 'Son 7 gün')); c.append(head);
-      const tok = el('div', 'tok'); tok.append(el('div', null, `<div class="num">${formatTokens(u.todayTokens)}</div><div class="sub" style="font-size:10px">bugün</div>`));
+      const tok = el('div', 'tok'); tok.append(el('div', null, `<div class="num">${formatTokens(u.todayTokens)}</div><div class="sub" style="font-size:10px">bugün</div>`
+        + (u.cacheReadToday != null ? `<div class="sub" style="font-size:10px">cache okuma ${formatTokens(u.cacheReadToday)}</div>` : '')));
       const days = el('div', 'days'); const arr = (S.daily[p] || []); const mx = Math.max(1, ...arr);
       for (const v of arr) { const i = el('i'); i.style.cssText = `height:${Math.max(3, 34 * v / mx)}px;background:${providerColor(p)}`; days.append(i); }
       tok.append(days); c.append(tok); box.append(c);

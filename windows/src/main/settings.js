@@ -11,13 +11,18 @@ const DEFAULTS = {
   refreshLogin: true,  // süresi dolan Claude Code oturumunu Claude Code'a yeniletir
   login: false,
   dashPage: 'usage',
+  trayStyle: 'logo',   // Windows tepsisi: 'logo' (veri yok, uygulama logosu) | 'bars' (5s ve haftalık çubukları) | 'number' (tek sayı, en düşük)
+  widget: false,       // her zaman üstte küçük yüzen pencere
+  widgetPos: null,     // { x, y } son konum
+  widgetScale: 1,      // widget boyutu: 0.7 ile 1.8 arası çarpan
 };
 
 class Settings {
   constructor(dir) {
     this.file = path.join(dir, 'settings.json');
     this.v = { ...DEFAULTS };
-    try { Object.assign(this.v, JSON.parse(fs.readFileSync(this.file, 'utf8'))); } catch { /* ilk açılış */ }
+    // Dosya başka bir araçla UTF-8 BOM'lu yazılmış olabilir; BOM JSON.parse'ı bozar, ayarlar sessizce sıfırlanırdı.
+    try { Object.assign(this.v, JSON.parse(fs.readFileSync(this.file, 'utf8').replace(/^﻿/, ''))); } catch { /* ilk açılış */ }
   }
   patch(p) { Object.assign(this.v, p); try { fs.writeFileSync(this.file, JSON.stringify(this.v, null, 2)); } catch { /* yoksay */ } return this.v; }
 }

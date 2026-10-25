@@ -34,6 +34,8 @@ body { width: 380px; padding: 16px; overflow: hidden; }
 .pools .lb b { color: var(--text); }
 .pools .bar { margin: 3px 0 9px; }
 .empty { font-size: 12px; color: var(--sub); }
+.login-help { display: flex; flex-direction: column; gap: 8px; }
+.login-actions { display: flex; gap: 6px; }
 .stale { font-size: 10px; color: #ff9f0a; }
 .foot-bar { display: flex; gap: 8px; align-items: center; }
 .foot-bar .grow { flex: 1; }

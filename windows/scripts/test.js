@@ -7,6 +7,7 @@ const fs = require('fs');
 const { pbFields, parseQuota } = require('../src/main/providers/antigravity');
 const { Store, dayKey } = require('../src/main/store');
 const { windows } = require('../src/main/sources');
+const { loginState } = require('../src/main/providers/claude');
 
 // protobuf: alan 1 = varint 150, alan 2 = "hi"
 const f = pbFields(Buffer.from([0x08, 0x96, 0x01, 0x12, 0x02, 0x68, 0x69]));
@@ -35,5 +36,20 @@ assert.deepStrictEqual(st.dailyTotals('claude', 2), [3, 30]);
 assert.strictEqual(dayKey(new Date(2026, 0, 5).getTime()), '2026-01-05');
 const agg = st.aggregate();
 assert.ok(agg.daily.length >= 1);
+assert.strictEqual(st.cacheReadSince('claude', 0), 100); // aynı mesajın tekrarı elenmiş, tek 100 sayılır
+
+// Claude giriş durumu: dört durum ayrı ayrı tanınmalı
+const future = Date.now() + 3600e3, past = Date.now() - 3600e3;
+assert.strictEqual(loginState(undefined), 'no-file');
+assert.strictEqual(loginState({ mcpOAuth: {} }), 'signed-out');           // yalnızca MCP girişi var
+assert.strictEqual(loginState({ claudeAiOauth: { accessToken: 't', expiresAt: past } }), 'expired');
+assert.strictEqual(loginState({ claudeAiOauth: { accessToken: 't', expiresAt: future } }), 'ok');
+assert.strictEqual(loginState({ claudeAiOauth: { accessToken: 't' } }), 'ok'); // süre alanı yoksa süresiz say
+
+// Ayarlar dosyası BOM'lu da okunmalı
+const { Settings } = require('../src/main/settings');
+const sdir = fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-settings-'));
+fs.writeFileSync(path.join(sdir, 'settings.json'), '﻿{"widget":true}');
+assert.strictEqual(new Settings(sdir).v.widget, true);
 
 console.log('tüm testler geçti');

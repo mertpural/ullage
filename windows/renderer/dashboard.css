@@ -47,12 +47,15 @@ html, body { height: 100%; }
 .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .15s; }
 .switch.on { background: var(--accent); } .switch.on::after { left: 20px; }
 select { font: inherit; color: var(--text); background: var(--card); border: var(--bw) solid var(--border); border-radius: 8px; padding: 6px 10px; }
+.sizectl { display: flex; align-items: center; gap: 10px; }
+.sizectl input { width: 150px; accent-color: var(--accent); }
+.sizectl b { width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
 .prov { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
 .prov .ico { width: 34px; height: 34px; }
 .prov .body { flex: 1; min-width: 0; }
 .prov .body b { font-size: 14px; }
 .prov .notes { font-size: 10px; color: var(--sub); margin-top: 4px; }
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
 .tcard { padding: 8px; border-radius: 16px; background: var(--card); border: 2px solid transparent; cursor: pointer; }
 .tcard.on { border-color: var(--accent); }
 .tcard .pv { height: 74px; padding: 10px; display: flex; flex-direction: column; gap: 8px; justify-content: space-between; }
