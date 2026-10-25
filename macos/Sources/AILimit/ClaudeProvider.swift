@@ -169,7 +169,9 @@ enum ClaudeLimitAPI {
         let r = await fetchViaAPI()
         if case .success(let l) = r {
             let age = Date().timeIntervalSince(l.fetchedAt)
-            if age < 600 || (l.fromStatusLine && age < 900) { return r }
+            // Taze sayılır: durum satırı 15 dakikaya, diğerleri bir buçuk dakikaya kadar. Daha eskiyse (hız sınırı, bekleme)
+            // ve yeni kullanım varsa ölçüm CLIProbe'un kendi 5 dakikalık sınırıyla yapılır.
+            if age < 90 || (l.fromStatusLine && age < 900) { return r }
         }
         // Taze değer yok (hız sınırı, bekleme ya da hiç kayıt yok): Claude'un kendi komutundan ölçmeyi dene.
         if let p = await CLIProbe.measureIfDue(stored: { lock.lock(); defer { lock.unlock() }; return stored() }) {
