@@ -16,6 +16,7 @@ const DEFAULTS = {
   widgetPos: null,     // { x, y } son konum
   widgetScale: 1,      // widget boyutu: 0.7 ile 1.8 arası çarpan
   usageCache: false,   // Kullanım sayfasında "Cache dahil" seçimi
+  cliProbe: true,      // Claude limitini gerekirse Claude Code komutuyla ölç (yalnızca yeni Claude kullanımı olunca, en sık 5 dakikada bir)
 };
 
 class Settings {

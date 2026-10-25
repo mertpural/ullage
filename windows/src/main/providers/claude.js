@@ -6,10 +6,19 @@ const os = require('os');
 const path = require('path');
 const { execFileSync, execFile } = require('child_process');
 const { walk, request, isoMs } = require('../util');
+const statusline = require('../statusline');
+const cliprobe = require('../cliprobe');
 
-const MIN_INTERVAL = 60 * 1000;      // iki gerçek sorgu arası en az 1 dakika (kapat-aç yapsan da korunur)
+const STATUS_FRESH = 15 * 60 * 1000; // durum satırı dosyası bundan yeniyse ağa hiç gidilmez
 const BACKOFF_MIN = 5 * 60 * 1000;   // hız sınırına (429) çarpınca en az 5 dakika bekle
 let memo = null;                      // { at, result }
+
+/** Anthropic'e iki sorgu arasındaki en kısa süre (kapat-aç yapsan da korunur, son deneme zamanı saklanır).
+ *  Yeni yerel Claude kullanımı varsa 1 dakika, yoksa 10 dakika: limit yalnızca kullanınca değişir. */
+function minInterval(store) {
+  const last = store.kv('claudeLastAttempt') || 0;
+  return store.latestEvent('claude') > last - 5000 ? 60 * 1000 : 10 * 60 * 1000;
+}
 
 /** Oturum anahtarı süresi dolduğunda Claude Code'un kendisine yeniletir: tek satırlık bir Haiku isteği çalıştırır, Claude Code
  *  anahtarı kendi yenileyip yazar. Anahtarlara bu uygulama dokunmaz. En sık 30 dakikada bir denenir. */
@@ -82,14 +91,57 @@ function loadToken() {
   return null;
 }
 
+/** Sıra: (varsa) durum satırı dosyası, sonra Anthropic kullanım uç noktası, o da işe yaramazsa Claude Code komutuyla ölçüm. */
 async function fetchLimits(store, opts = {}) {
   const now = Date.now();
-  if (memo && now - memo.at < MIN_INTERVAL) return memo.result;
+  // Claude Code'un durum satırından yazılan yerel dosya tazeyse ağa hiç gidilmez.
+  const local = opts.statusDir ? statusline.read(opts.statusDir) : null;
+  if (local && now - local.at < STATUS_FRESH) {
+    const prev = store.kv('claudeLast');
+    if (!prev || prev.at !== local.at || prev.src !== 'statusline') store.kv('claudeLast', local); // son iyi değer kalıcı saklanır
+    return { ok: true, ...local };
+  }
+  let result = await fetchViaApi(store, opts, now);
+  if (opts.cliProbe !== false) {
+    const probed = await maybeProbe(store, result, now);
+    if (probed) { result = probed; memo = { at: now, result }; }
+  }
+  return result;
+}
+
+const PROBE_GAP = 5 * 60 * 1000;      // iki ölçüm arası en az 5 dakika (kalıcı, yeniden başlatmada da korunur)
+const PROBE_STALE = 10 * 60 * 1000;   // son başarılı değer bundan eskiyse ölçüm düşünülür
+const PROBE_BLOCK = 60 * 60 * 1000;   // komut limit yüzdesi vermiyorsa (eski Claude Code) bu süre bir daha denenmez
+let probing = false;
+
+/** Claude Code komutuyla (`claude -p`) ölçer: yalnızca sonuç yoksa, hız sınırı beklemesi varsa ya da son değer eskiyse VE
+ *  son değerden / son ölçümden sonra yeni yerel Claude kullanımı olduysa. Yeni kullanım yoksa hiç çalıştırılmaz. */
+async function maybeProbe(store, result, now) {
+  if (probing || now < (store.kv('claudeProbeBlockedUntil') || 0)) return null;
+  const lastProbe = store.kv('claudeLastProbe') || 0;
+  if (now - lastProbe < PROBE_GAP) return null;
+  const lastGood = result.ok ? result.at : 0;
+  const waiting = now < (store.kv('claudeBackoffUntil') || 0);
+  if (!(!result.ok || waiting || now - lastGood > PROBE_STALE)) return null;
+  if (!(store.latestEvent('claude') > Math.max(lastGood, lastProbe))) return null;
+  probing = true;
+  try {
+    store.kv('claudeLastProbe', now);
+    const { limits, seen } = await cliprobe.measure();
+    if (!limits) { if (seen) store.kv('claudeProbeBlockedUntil', now + PROBE_BLOCK); return null; }
+    const rec = { at: Date.now(), ...limits };
+    store.kv('claudeLast', rec);
+    return { ok: true, ...rec };
+  } finally { probing = false; }
+}
+
+async function fetchViaApi(store, opts, now) {
+  if (memo && now - memo.at < minInterval(store)) return memo.result;
   const stored = store.kv('claudeLast');
   const withStored = (err) => (stored ? { ok: true, ...stored } : { ok: false, error: err });
 
   if (now < (store.kv('claudeBackoffUntil') || 0)) return withStored('Anthropic hız sınırı uyguladı; biraz sonra yeniden denenecek');
-  if (now - (store.kv('claudeLastAttempt') || 0) < MIN_INTERVAL && stored) return { ok: true, ...stored };
+  if (now - (store.kv('claudeLastAttempt') || 0) < minInterval(store) && stored) return { ok: true, ...stored };
   store.kv('claudeLastAttempt', now);
 
   let tok = loadToken();
@@ -125,9 +177,9 @@ async function fetchLimits(store, opts = {}) {
   return result;
 }
 
-/** Elle yenilemede önbelleği atlar; gerçek sorgu en sık 30 saniyede bir yapılır. */
+/** Elle yenilemede önbelleği atlar; ama gerçek sorgu yine en sık `minInterval` süresinde bir yapılır (Anthropic hız sınırı). */
 function invalidate(store) {
-  if (Date.now() - (store.kv('claudeLastAttempt') || 0) > 30 * 1000) { memo = null; store.kv('claudeLastAttempt', 0); }
+  if (Date.now() - (store.kv('claudeLastAttempt') || 0) > minInterval(store)) { memo = null; store.kv('claudeLastAttempt', 0); }
 }
 
 /** macOS'ta giriş Keychain'de olabilir; diğer sistemlerde yalnızca dosyaya bakılır. */
@@ -156,13 +208,21 @@ async function read(store, opts = {}) {
     u.fiveHourLeft = r.five == null ? null : (r.fiveReset && r.fiveReset <= now ? 1 : r.five);
     u.weeklyLeft = r.week == null ? null : (r.weekReset && r.weekReset <= now ? 1 : r.week);
     u.fiveHourReset = r.fiveReset; u.weeklyReset = r.weekReset;
-    if (now - r.at < 10 * 60 * 1000) {
+    // Limit yalnızca Claude kullanılınca değişir: değerden sonra yerel kullanım yoksa eski sayılmaz.
+    const usedSince = store.latestEvent('claude') > r.at + 90 * 1000;
+    if (now - r.at < 10 * 60 * 1000 || !usedSince) {
       u.limitConfidence = 'exact';
-      u.notes.push('Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla).');
+      if (r.src === 'statusline' || r.src === 'probe') u.loginState = 'ok'; // değer Claude Code'dan geldi, OAuth dosyası gerekmedi
+      u.notes.push(r.src === 'statusline' ? 'Limit: Claude Code\'un durum satırından (yerel, ağ gerekmez).'
+        : r.src === 'probe' ? 'Limit: Claude Code komutundan ölçüldü (tek satırlık küçük bir istek).'
+          : 'Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla).');
     } else {
       u.limitConfidence = 'estimate';
       u.staleSince = r.at;
-      u.notes.push('Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor; güncel olmayabilir.');
+      u.notes.push(r.src === 'statusline'
+        ? 'Claude Code\'un durum satırından son alınan değer gösteriliyor; Claude Code çalışınca güncellenir.'
+        : r.src === 'probe' ? 'Claude Code komutuyla son ölçülen değer gösteriliyor; yeni Claude kullanımı olunca yeniden ölçülür.'
+          : 'Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor; güncel olmayabilir.');
     }
   } else {
     u.notes.push(LOGIN_NOTES[u.loginState] || `Limit yüzdesi alınamadı: ${r.error}`);
@@ -172,4 +232,4 @@ async function read(store, opts = {}) {
   return u;
 }
 
-module.exports = { read, invalidate, ingest, loginState };
+module.exports = { read, invalidate, ingest, loginState, minInterval, maybeProbe };

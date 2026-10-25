@@ -21,6 +21,14 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 - Widget boyutu: Ayarlar > Görünüm'de %70 ile %180 arası kaydırıcı. %70, %150 ve %180'de widget'ın doğru boyutta çizildiğini ve %180'de ekran dışına taşmadığını gördüm. Kaydırıcıyı arayüzden sürüklemeyi denemedim, ayarı uygulamanın kendi çağrısıyla değiştirdim.
 - Logo modunda tepsi simgesi gizli simgelerde logo olarak görünüyor ve UI Automation ile basınca dashboard penceresi açıldı.
 
+## Claude limiti: yeni yollar (Mac'ten çevrildi)
+- **Claude Code komutuyla ölçüm** (`src/main/cliprobe.js`, ayar `cliProbe`, varsayılan açık): Anthropic sorgusu işe yaramazsa, yalnızca yeni yerel Claude kullanımı olunca ve en sık 5 dakikada bir `claude -p ...` çalıştırılıp `rate_limit_event` satırındaki `unifiedWindows` okunur. Sorgu zamanları (`claudeLastProbe`) kalıcı. Birim testleri geçiyor.
+  - **Gerçek denemede bu bilgisayarda limit yüzdesi gelmedi:** kurulu Claude Code 2.1.218, `rate_limit_event` satırında `unifiedWindows` yok (npm'deki son sürüm 2.1.310). Komut Windows'ta (.cmd, kabuk üzerinden) 4 saniyede çalışıyor ve olayı alıyor, ama yüzde yok, bu yüzden sonuç boş kalıyor ve bir saat tekrar denenmiyor. Yeni sürümde çalışıp çalışmadığı **denenmedi**.
+  - `macos/.../CLIProbe.swift` Mac'ten gelen zipte yoktu, tarif mesajdan alındı.
+- **Durum satırından okuma** (`src/main/statusline.js`, Bildirim ve otomasyon'da "Claude limitini Claude Code'dan al", varsayılan kapalı): betik `statusline.ps1` (PowerShell, yalnızca ASCII), komut `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "<yol>/statusline.ps1"`. Claude Code komutları Windows'ta **Git Bash** ile çalıştırıyor (kanca testiyle görüldü); yolda boşluk olsa da komut çalıştı. Ayar dosyası yedeği, başka durum satırına dokunmama ve kaldırma birim testlerinde ve arayüzde (sahte kullanıcı klasörüyle) denendi.
+  - **Gerçek durum satırı çalıştırması denenmedi:** Claude Code'un etkileşimli oturumunu otomatik süremedim (ilk açılış sorusunda kaldı) ve `rate_limits` alanının gerçekten gelip gelmediği görülmedi.
+- Anthropic sorgusu artık kullanıma bağlı: yeni yerel Claude kullanımı varsa en sık dakikada bir, yoksa 10 dakikada bir. Eski değer "Tahmini" sayılmadan önce, değerden sonra yerel kullanım olması da aranıyor (Mac ile aynı).
+
 ## Henüz denenmedi
 - Claude limiti: bu bilgisayarda Claude Code'a `/login` ile giriş yapılmadığı için gerçek limit verisi görülmedi.
 - Popover'daki giriş mesajı ve düğmelerin ekranda görünüşü ve kopyalama düğmesi.

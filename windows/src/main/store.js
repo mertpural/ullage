@@ -76,6 +76,13 @@ class Store {
     return t;
   }
 
+  /** Sağlayıcının en son olayının zamanı (ms); hiç olay yoksa 0. */
+  latestEvent(provider) {
+    let t = 0;
+    for (const e of this.eventsOf(provider)) if (e[0] > t) t = e[0];
+    return t;
+  }
+
   /** Cache okumaları: harcanan token'a dahil değil, ayrıca gösterilmek için. */
   cacheReadSince(provider, sinceMs) {
     let t = 0;

@@ -52,4 +52,70 @@ const sdir = fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-settings-'));
 fs.writeFileSync(path.join(sdir, 'settings.json'), '﻿{"widget":true}');
 assert.strictEqual(new Settings(sdir).v.widget, true);
 
-console.log('tüm testler geçti');
+// ---- Claude Code komutuyla ölçüm: çıktı ayrıştırma
+const cliprobe = require('../src/main/cliprobe');
+const rlEvent = '{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","resetsAt":1792936800,"rateLimitType":"five_hour","unifiedWindows":{"five_hour":{"utilization":0.69,"resetsAt":1792936800,"status":"allowed"},"seven_day":{"utilization":0.26,"resetsAt":1793188800,"status":"allowed"}}}}';
+const probed = cliprobe.parseOutput('{"type":"system","subtype":"init"}\r\n' + rlEvent + '\r\n{"type":"result","subtype":"success"}\r\n'); // CRLF
+assert.ok(probed.seen);
+assert.ok(Math.abs(probed.limits.five - 0.31) < 1e-9 && Math.abs(probed.limits.week - 0.74) < 1e-9); // kalan = 1 - utilization
+assert.strictEqual(probed.limits.fiveReset, 1792936800000); assert.strictEqual(probed.limits.weekReset, 1793188800000); // saniye -> ms
+assert.strictEqual(probed.limits.src, 'probe');
+// Eski Claude Code: olay var ama yüzde yok (gerçek 2.1.218 çıktısı böyleydi)
+const oldCli = cliprobe.parseOutput('{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","resetsAt":1792936800,"rateLimitType":"five_hour","overageStatus":"rejected"}}\n');
+assert.ok(oldCli.seen); assert.strictEqual(oldCli.limits, null);
+assert.deepStrictEqual(cliprobe.parseOutput('düz yazı\n{bozuk json rate_limit_event'), { seen: false, limits: null });
+
+// ---- Claude Code durum satırı: ayrıştırma, kurulum, kaldırma
+const statusline = require('../src/main/statusline');
+const sl = statusline.parseStatus({ rate_limits: { five_hour: { used_percentage: 34, resets_at: 1792936800 }, seven_day: { used_percentage: 22.5, resets_at: '2026-10-28T11:59:59.765Z' } } }, 1000);
+assert.ok(Math.abs(sl.five - 0.66) < 1e-9 && Math.abs(sl.week - 0.775) < 1e-9);
+assert.strictEqual(sl.fiveReset, 1792936800000); assert.strictEqual(sl.weekReset, Date.parse('2026-10-28T11:59:59.765Z')); assert.strictEqual(sl.at, 1000);
+assert.strictEqual(statusline.parseStatus({ cwd: 'x' }, 1), null);
+const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-sl-'));
+const slDir = path.join(tmpRoot, 'Ullage test'); // yolda boşluk
+const slSettings = path.join(tmpRoot, 'claude', 'settings.json');
+fs.mkdirSync(path.dirname(slSettings), { recursive: true });
+fs.writeFileSync(slSettings, '{"theme":"dark"}');
+assert.strictEqual(statusline.install(slDir, slSettings), null);
+const afterInstall = JSON.parse(fs.readFileSync(slSettings, 'utf8'));
+assert.strictEqual(afterInstall.theme, 'dark');
+assert.strictEqual(afterInstall.statusLine.type, 'command'); assert.strictEqual(afterInstall.statusLine.padding, 0);
+assert.ok(afterInstall.statusLine.command.includes('"' + slDir.replace(/\\/g, '/') + '/statusline.ps1"')); // tırnaklı, düz eğik çizgili yol
+assert.strictEqual(fs.readFileSync(slSettings + '.ullage-yedek', 'utf8'), '{"theme":"dark"}'); // yedek özgün hâl
+assert.ok(fs.existsSync(path.join(slDir, 'statusline.ps1')));
+assert.ok(statusline.state(slDir, slSettings).installed);
+statusline.uninstall(slDir, slSettings);
+assert.deepStrictEqual(JSON.parse(fs.readFileSync(slSettings, 'utf8')), { theme: 'dark' }); // yalnızca bizimki kalktı
+// başka bir durum satırı varsa dokunulmaz
+fs.writeFileSync(slSettings, '{"statusLine":{"type":"command","command":"baska.cmd"}}');
+assert.ok(statusline.install(slDir, slSettings).includes('Başka bir durum satırı'));
+assert.ok(statusline.state(slDir, slSettings).other);
+statusline.uninstall(slDir, slSettings);
+assert.strictEqual(JSON.parse(fs.readFileSync(slSettings, 'utf8')).statusLine.command, 'baska.cmd');
+
+// ---- ölçüm koşulları (maybeProbe): yalnızca yeni kullanım varsa, en sık 5 dakikada bir
+const claudeMod = require('../src/main/providers/claude');
+const pst = new Store(fs.mkdtempSync(path.join(os.tmpdir(), 'ullage-probe-')));
+let probeCalls = 0;
+cliprobe.measure = async () => { probeCalls++; return { seen: true, limits: { five: 0.5, week: 0.8, fiveReset: 1, weekReset: 2, src: 'probe' } }; };
+const T = Date.now(), MIN = 60000;
+pst.upsert('claude', 'a|b', T - MIN, 'x', 1, 1, 0, 0); // 1 dk önce yerel kullanım
+const staleResult = { ok: true, at: T - 30 * MIN };    // 30 dk önceki değer
+(async () => {
+  let r = await claudeMod.maybeProbe(pst, staleResult, T);
+  assert.ok(r && r.ok && r.src === 'probe' && probeCalls === 1); assert.strictEqual(pst.kv('claudeLast').src, 'probe');
+  assert.strictEqual(await claudeMod.maybeProbe(pst, staleResult, T + MIN), null); assert.strictEqual(probeCalls, 1);          // 5 dk dolmadı
+  assert.strictEqual(await claudeMod.maybeProbe(pst, staleResult, T + 6 * MIN), null); assert.strictEqual(probeCalls, 1);      // yeni kullanım yok
+  pst.upsert('claude', 'c|d', T + 7 * MIN, 'x', 1, 1, 0, 0);
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: true, at: T + 6 * MIN }, T + 8 * MIN), null); assert.strictEqual(probeCalls, 1); // değer taze
+  r = await claudeMod.maybeProbe(pst, { ok: false, error: 'x' }, T + 8 * MIN); assert.ok(r && probeCalls === 2);                // sonuç yok + yeni kullanım
+  pst.kv('claudeBackoffUntil', T + 60 * MIN); pst.upsert('claude', 'e|f', T + 14 * MIN, 'x', 1, 1, 0, 0);
+  r = await claudeMod.maybeProbe(pst, { ok: true, at: T + 13 * MIN }, T + 15 * MIN); assert.ok(r && probeCalls === 3);          // hız sınırı beklemesi, değerden sonra yeni kullanım, 5 dk geçti
+  // komut yüzde vermiyorsa (eski Claude Code) bir saat denenmez
+  cliprobe.measure = async () => { probeCalls++; return { seen: true, limits: null }; };
+  pst.upsert('claude', 'g|h', T + 30 * MIN, 'x', 1, 1, 0, 0);
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 31 * MIN), null); assert.strictEqual(probeCalls, 4);
+  pst.upsert('claude', 'i|j', T + 40 * MIN, 'x', 1, 1, 0, 0);
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 45 * MIN), null); assert.strictEqual(probeCalls, 4);      // engelli
+  console.log('tüm testler geçti');
+})().catch((e) => { console.error(e); process.exit(1); });
