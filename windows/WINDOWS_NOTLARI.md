@@ -8,6 +8,7 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 - Claude kartında cache okuma token'ı ayrı satır olarak gösteriliyor (toplam değişmedi).
 - Tepsi simgesi: varsayılan olarak 5 saatlik ve haftalık en düşük kalan limit iki çubuk olarak çiziliyor, etiketler büyütüldü ve dış çizgili. "Tek sayı" modu seçenek olarak duruyor.
 - Yüzen widget: şeffaf arka planlı yuvarlak kart, her zaman üstte, odak almaz, görev çubuğunda görünmez, sürüklenince konumu kaydedilir. İlk açılışta ekranın sağ üstünde başlar. Ayarlar > Görünüm'den ya da tepsi menüsünden açılıp kapanır.
+- Widget'ın arkasındaki dikdörtgen ton farkı giderildi: gölge pencere kenarında kesiliyordu, boşluk genişletildi ve gölge küçültüldü. Widget'ta Claude girişi yoksa ne yapılacağı yazıyor.
 - `settings.json` UTF-8 BOM'lu yazılırsa artık sessizce sıfırlanmıyor.
 
 ## Çalıştığını gördüklerim

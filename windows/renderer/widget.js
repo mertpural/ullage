@@ -31,7 +31,11 @@
       if (w.week) row.append(line('H', w.week));
       root.append(row);
     }
-    if (!any) root.append(el('div', 'w-empty', 'Limit verisi yok. Claude için Ayarlar > Sağlayıcılar kısmına bak.'));
+    if (!any) {
+      const c = S.usage.claude || {};
+      const hint = { 'signed-out': 'Claude girişi yok: terminalde claude yazıp /login yap.', 'no-file': 'Claude girişi yok: terminalde claude yazıp /login yap.', expired: 'Claude oturumunun süresi dolmuş; Claude Code\'u açınca yenilenir.' }[c.loginState];
+      root.append(el('div', 'w-empty', S.settings.enabled.includes('claude') && hint ? hint : 'Limit verisi yok. Ayrıntı için Ayarlar > Sağlayıcılar.'));
+    }
     requestAnimationFrame(() => window.ullage.resizePopover(Math.ceil(document.body.scrollHeight)));
   }
 

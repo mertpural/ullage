@@ -1,11 +1,12 @@
 /* Yüzen widget: pencere şeffaf, yalnızca #root kartı görünür ve sürüklenebilir. */
 html, body { background: transparent !important; }
-body { width: 240px; padding: 6px; overflow: hidden; }
+/* Gölge pencere kenarında kesilirse arkada dikdörtgen bir ton farkı görünür; bu yüzden boşluk gölgeden geniş. */
+body { width: 252px; padding: 14px; overflow: hidden; }
 #root {
   display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   border: var(--bw) solid var(--border); border-radius: max(var(--radius), 14px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
   -webkit-app-region: drag;
 }
 .w-head { display: flex; justify-content: space-between; align-items: center; }

@@ -72,13 +72,13 @@ function makeWidget() {
   const useSaved = saved && widgetPosition(saved);
   // Şeffaf ve odak almayan pencere: arkadaki uygulamalar etkilenmez, yalnızca karta basınca tutulur.
   widget = new BrowserWindow({
-    width: 240, height: 120, show: false, frame: false, transparent: true, hasShadow: false, resizable: false, skipTaskbar: true,
+    width: 252, height: 120, show: false, frame: false, transparent: true, hasShadow: false, resizable: false, skipTaskbar: true,
     alwaysOnTop: true, focusable: false, minimizable: false, maximizable: false, fullscreenable: false, backgroundColor: '#00000000',
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
   widget.setAlwaysOnTop(true, 'screen-saver');
   if (useSaved) widget.setPosition(saved.x, saved.y);
-  else { const wa = screen.getPrimaryDisplay().workArea; widget.setPosition(wa.x + wa.width - 240 - 16, wa.y + 16); }
+  else { const wa = screen.getPrimaryDisplay().workArea; widget.setPosition(wa.x + wa.width - 252 - 4, wa.y + 4); }
   widget.loadFile(R('widget.html'));
   widget.once('ready-to-show', () => widget.showInactive());
   let t = null;
