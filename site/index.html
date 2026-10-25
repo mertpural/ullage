@@ -274,11 +274,11 @@ footer a:hover { color: var(--text); }
 
 <script>
 (function () {
-  // Windows dosyaları 124 MB: Vercel, Netlify, Cloudflare Pages gibi ücretsiz sitelere sığmaz.
-  // Dosyaları büyük dosya kabul eden bir yere koyup (Drive, GitHub Releases, kendi sunucun) adreslerini buraya yaz.
+  // Windows dosyaları 124 MB: bazı ücretsiz sitelere sığmaz (Vercel, Cloudflare Pages).
+  // Siteye sığmazsa dosyaları başka bir yere koyup (Drive, GitHub Releases) adreslerini buraya yaz.
   var LINKS = {
-    winSetup: 'https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe',
-    winPortable: 'https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe'
+    winSetup: 'downloads/Ullage-Setup.exe',
+    winPortable: 'downloads/Ullage-Portable.exe'
   };
   document.querySelectorAll('[data-link]').forEach(function (a) { var u = LINKS[a.getAttribute('data-link')]; if (u) a.setAttribute('href', u); });
 
