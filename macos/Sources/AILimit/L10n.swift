@@ -60,6 +60,13 @@ enum L {
         "%lld gün": "%lld days", "%lld aktif gün": "%lld active days", "%@ · kullanım yok": "%@ · no usage", "%@ · %@ token · %@": "%@ · %@ tokens · %@",
         "Anthropic bu hesaba geçici bir hız sınırı koydu. %@ sonrasında kendiliğinden düzelir, bir şey yapmana gerek yok. Uygulamayı o zamana kadar yeniden başlatma.":
             "Anthropic has temporarily rate-limited this account. It fixes itself after %@; you don't need to do anything. Don't restart the app until then.",
+        "Claude limitini Claude Code'dan al": "Read the Claude limit from Claude Code",
+        "Claude Code, her cevaptan sonra limit yüzdesini yerel bir dosyaya yazar; Ullage onu okur. Ağ gerekmez, Anthropic'in hız sınırına takılmaz. Açınca ~/.claude/settings.json dosyasına küçük bir durum satırı betiği eklenir (önce yedeği alınır, başka bir durum satırı varsa dokunulmaz). Yalnızca Claude Code çalışırken güncellenir.":
+            "Claude Code writes the limit percentage to a local file after every reply and Ullage reads it. No network, no Anthropic rate limit. Turning it on adds a small status line script to ~/.claude/settings.json (backed up first; an existing status line is left alone). It only updates while Claude Code is running.",
+        "Claude Code durum satırı bağlı": "Claude Code status line connected",
+        "İsteğe bağlı. Bildirim ve otomasyon sayfasından açarsan limit, ağa gitmeden Claude Code'dan okunur. Açtıktan sonra Claude Code'ta bir mesaj yazınca veri gelir.": "Optional. If you turn it on under Notifications & automation, the limit is read from Claude Code without the network. Data arrives after you send a message in Claude Code.",
+        "Limit: Claude Code'un durum satırından (yerel, ağ gerekmez).": "Limit: from the Claude Code status line (local, no network).",
+        "Başka bir durum satırı tanımlı, değiştirilmedi": "Another status line is already set; left unchanged",
         // Sayfa adları
         "Kullanım": "Usage", "Sağlayıcılar": "Providers", "Senkronizasyon": "Sync", "Menü çubuğu": "Menu bar",
         "Görünüm": "Appearance", "Bildirim ve otomasyon": "Notifications & automation", "Hakkında": "About",

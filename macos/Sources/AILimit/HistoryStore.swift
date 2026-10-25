@@ -278,3 +278,18 @@ extension HistoryStore {
         return out
     }
 }
+
+extension HistoryStore {
+    /// Bir sağlayıcının kayıtlı en yeni olayının zamanı (yoksa en eski tarih).
+    func latestEvent(provider: String) -> Date {
+        lock.lock(); defer { lock.unlock() }
+        var st: OpaquePointer?
+        defer { sqlite3_finalize(st) }
+        sqlite3_prepare_v2(db, "SELECT MAX(ts) FROM events WHERE provider=?", -1, &st, nil)
+        sqlite3_bind_text(st, 1, provider, -1, SQLITE_TRANSIENT)
+        if sqlite3_step(st) == SQLITE_ROW, sqlite3_column_type(st, 0) != SQLITE_NULL {
+            return Date(timeIntervalSince1970: sqlite3_column_double(st, 0))
+        }
+        return .distantPast
+    }
+}

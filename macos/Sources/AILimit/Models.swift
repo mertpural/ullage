@@ -169,6 +169,14 @@ final class AppState: ObservableObject {
             refresh()
         }
     }
+    /// Limiti Claude Code'un durum satırından okur (ağ gerekmez). Açılınca Claude Code ayarlarına küçük bir betik eklenir.
+    @Published var statusLineOn: Bool = UserDefaults.standard.bool(forKey: "statusLineOn") {
+        didSet {
+            UserDefaults.standard.set(statusLineOn, forKey: "statusLineOn")
+            if statusLineOn { statusLineMessage = StatusLine.install() ?? "" } else { StatusLine.uninstall(); statusLineMessage = "" }
+        }
+    }
+    @Published var statusLineMessage = ""
     var starterTimer: Timer?
     @Published var starterFireAt: Date?
     @Published var weeklySummaryOn: Bool = UserDefaults.standard.object(forKey: "weeklySummaryOn") as? Bool ?? true {
@@ -228,6 +236,7 @@ final class AppState: ObservableObject {
         if notificationsOn { Notifier.requestAuthorization() }
         startRefreshing()
         DispatchQueue.main.async { self.applyThemeIcon() }
+        if statusLineOn && !StatusLine.installed { statusLineMessage = StatusLine.install() ?? "" }
         if !UserDefaults.standard.bool(forKey: "onboardingDone") {
             UserDefaults.standard.set(true, forKey: "onboardingDone")
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { self.openDashboard("providers") }

@@ -187,6 +187,8 @@ struct SetupCheck {
                  hint: ClaudeLimitAPI.backoffEnd.map {
                      L.f("Anthropic bu hesaba geçici bir hız sınırı koydu. %@ sonrasında kendiliğinden düzelir, bir şey yapmana gerek yok. Uygulamayı o zamana kadar yeniden başlatma.", AppState.whenText($0))
                  } ?? "Claude Code'a giriş yapılı değilse ya da oturum bittiyse limit görünmez. Terminalde `claude` çalıştır, gerekirse /login yaz."),
+            Item(ok: StatusLine.installed && StatusLine.read() != nil, title: "Claude Code durum satırı bağlı",
+                 hint: "İsteğe bağlı. Bildirim ve otomasyon sayfasından açarsan limit, ağa gitmeden Claude Code'dan okunur. Açtıktan sonra Claude Code'ta bir mesaj yazınca veri gelir."),
             Item(ok: exists(".codex/sessions"), title: L.t("Codex kullanımı bulundu"),
                  hint: "Codex'i hiç kullanmadıysan bu normal. Kullanınca kendiliğinden görünür."),
             Item(ok: codex?.limitConfidence == .exact, title: L.t("Codex limiti okunuyor"),

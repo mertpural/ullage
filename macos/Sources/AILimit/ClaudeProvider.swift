@@ -19,9 +19,13 @@ enum ClaudeProvider {
             u.fiveHourReset = r.fiveHourReset
             u.weeklyReset = r.weeklyReset
             let age = Date().timeIntervalSince(r.fetchedAt)
-            if age < 600 {
+            // Limit yalnızca Claude kullanılınca değişir: değerden sonra yerel kullanım yoksa eski sayılmaz.
+            let usedSince = store.latestEvent(provider: "claude") > r.fetchedAt.addingTimeInterval(90)
+            if age < 600 || !usedSince {
                 u.limitConfidence = .exact
-                u.notes.append(L.t("Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla)."))
+                u.notes.append(L.t(r.fromStatusLine
+                    ? "Limit: Claude Code'un durum satırından (yerel, ağ gerekmez)."
+                    : "Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla)."))
             } else {
                 let f = DateFormatter(); f.timeStyle = .short; f.dateStyle = age > 86400 ? .short : .none
                 u.limitConfidence = .estimate
@@ -95,6 +99,7 @@ struct ClaudeLimits {
     var fiveHourLeft: Double?, weeklyLeft: Double?
     var fiveHourReset: Date?, weeklyReset: Date?
     var fetchedAt = Date()
+    var fromStatusLine = false
 }
 
 /// Claude Code'un Keychain'e yazdığı OAuth erişim anahtarıyla kullanım yüzdelerini okur.
@@ -110,7 +115,12 @@ enum ClaudeLimitAPI {
     nonisolated(unsafe) private static var backoffUntil = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "claudeBackoffUntil"))
 
     /// Anthropic'e iki sorgu arasındaki en kısa süre. Uygulama kapanıp açılsa da korunur (son deneme zamanı saklanır).
-    private static let minInterval: TimeInterval = 60
+    /// Yeni yerel Claude kullanımı varsa dakikada bir, yoksa 10 dakikada bir sorulur: limit yalnızca kullanınca değişir.
+    private static var minInterval: TimeInterval {
+        let last = UserDefaults.standard.double(forKey: "claudeLastAttempt")
+        let newest = HistoryStore.shared.latestEvent(provider: "claude").timeIntervalSince1970
+        return newest > last - 5 ? 60 : 600
+    }
     private static let lastAttemptKey = "claudeLastAttempt"
 
     /// Elle yenilemede önbelleği atlar, ama 30 saniyeden sık sorgu yapılmaz (Anthropic hız sınırı).
@@ -153,6 +163,11 @@ enum ClaudeLimitAPI {
     /// Uç noktayı en fazla 5 dakikada bir sorgular; hız sınırına (429) takılırsa Retry-After süresince
     /// beklenir ve bu sürede son başarılı değer (yaşıyla birlikte) döndürülür.
     static func fetch() async -> Result<ClaudeLimits, LimitError> {
+        // Claude Code'un durum satırından yazılan yerel dosya taze ise ağa hiç gidilmez.
+        if let f = StatusLine.read(), Date().timeIntervalSince(f.fetchedAt) < 900 {
+            lock.lock(); store(f); lock.unlock()
+            return .success(f)
+        }
         lock.lock()
         if let c = cached, Date().timeIntervalSince(c.at) < minInterval { lock.unlock(); return c.result }
         let waiting = Date() < backoffUntil

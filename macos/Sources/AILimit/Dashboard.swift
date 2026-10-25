@@ -308,6 +308,9 @@ struct AutomationPage: View {
         SettingRow(title: L.t("Haftalık özet"), subtitle: L.t("Pazartesi sabahı geçen haftanın toplam token'ını, en yoğun gününü ve en çok kullandığın aracı bildirir. Bildirimler kapalıysa gelmez.")) {
             Toggle("", isOn: $state.weeklySummaryOn).toggleStyle(.switch).labelsHidden()
         }
+        SettingRow(title: L.t("Claude limitini Claude Code'dan al"), subtitle: L.t("Claude Code, her cevaptan sonra limit yüzdesini yerel bir dosyaya yazar; Ullage onu okur. Ağ gerekmez, Anthropic'in hız sınırına takılmaz. Açınca ~/.claude/settings.json dosyasına küçük bir durum satırı betiği eklenir (önce yedeği alınır, başka bir durum satırı varsa dokunulmaz). Yalnızca Claude Code çalışırken güncellenir.") + (state.statusLineMessage.isEmpty ? "" : " — " + L.t(state.statusLineMessage))) {
+            Toggle("", isOn: $state.statusLineOn).toggleStyle(.switch).labelsHidden()
+        }
         SettingRow(title: L.t("Girişte otomatik başlat"), subtitle: L.t("Mac'e giriş yapınca uygulama kendiliğinden açılır.")) {
             Toggle("", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
                 .toggleStyle(.switch).labelsHidden()
