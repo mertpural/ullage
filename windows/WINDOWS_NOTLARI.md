@@ -9,6 +9,7 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 - Tepsi simgesi varsayılan olarak uygulamanın logosu: veri göstermiyor, ipucunda da yalnızca "Ullage" yazıyor. Simgeye basınca uygulama penceresi (Kullanım) açılıyor; hızlı görünüm sağ tık menüsünde. Limitler yüzen widget'ta. Ayarlar > Görünüm'den "5s ve haftalık çubuklar" (etiketler büyütüldü, dış çizgili) ve "Tek sayı" seçenekleri de seçilebilir; bu ikisinde simgeye basınca hızlı görünüm açılır.
 - Yüzen widget: şeffaf arka planlı yuvarlak kart, her zaman üstte, odak almaz, görev çubuğunda görünmez, sürüklenince konumu kaydedilir. İlk açılışta ekranın sağ üstünde başlar. Ayarlar > Görünüm'den ya da tepsi menüsünden açılıp kapanır.
 - Widget'ın arkasındaki dikdörtgen ton farkı giderildi: gölge pencere kenarında kesiliyordu, boşluk genişletildi ve gölge küçültüldü. Widget'ta Claude girişi yoksa ne yapılacağı yazıyor.
+- Kullanım sayfasındaki "Cache dahil" seçimi ayarlarda saklanıyor (`usageCache`), kapanıp açılınca korunur ve bugün/dün kartlarına, serilere, ısı haritasına ve grafiğe uygulanır. Windows ve Mac tarafında aynı düzeltme ayrı yapılmıştı; birleştirmede Mac sürümü (yorumsuz) alındı. Aralık, Sağlayıcı/Model ve filtre seçimleri hâlâ her açılışta sıfırlanıyor, popover'daki "Bugün" sayısı cache seçimini izlemiyor.
 - `settings.json` UTF-8 BOM'lu yazılırsa artık sessizce sıfırlanmıyor.
 
 ## Çalıştığını gördüklerim
