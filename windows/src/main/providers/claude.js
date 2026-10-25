@@ -110,7 +110,10 @@ async function fetchLimits(store, opts = {}) {
 }
 
 const PROBE_GAP = 5 * 60 * 1000;      // iki ölçüm arası en az 5 dakika (kalıcı, yeniden başlatmada da korunur)
-const PROBE_STALE = 10 * 60 * 1000;   // son başarılı değer bundan eskiyse ölçüm düşünülür
+// Değer bundan eskiyse ölçüm aday olur: Anthropic sorgusu ya da komuttan gelen değer için 90 sn, durum satırı dosyasından gelen için 15 dk.
+// Sıklığı yalnızca PROBE_GAP belirler; aday eşiği 10 dakika olsaydı aktif kullanımda değer fiilen 10 dakika eski kalırdı.
+const PROBE_STALE = 90 * 1000;
+const PROBE_STALE_STATUSLINE = 15 * 60 * 1000;
 const PROBE_BLOCK = 60 * 60 * 1000;   // komut limit yüzdesi vermiyorsa (eski Claude Code) bu süre bir daha denenmez
 let probing = false;
 
@@ -122,7 +125,8 @@ async function maybeProbe(store, result, now) {
   if (now - lastProbe < PROBE_GAP) return null;
   const lastGood = result.ok ? result.at : 0;
   const waiting = now < (store.kv('claudeBackoffUntil') || 0);
-  if (!(!result.ok || waiting || now - lastGood > PROBE_STALE)) return null;
+  const staleAfter = result.src === 'statusline' ? PROBE_STALE_STATUSLINE : PROBE_STALE;
+  if (!(!result.ok || waiting || now - lastGood > staleAfter)) return null;
   if (!(store.latestEvent('claude') > Math.max(lastGood, lastProbe))) return null;
   probing = true;
   try {

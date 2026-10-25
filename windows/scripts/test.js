@@ -107,15 +107,25 @@ const staleResult = { ok: true, at: T - 30 * MIN };    // 30 dk önceki değer
   assert.strictEqual(await claudeMod.maybeProbe(pst, staleResult, T + MIN), null); assert.strictEqual(probeCalls, 1);          // 5 dk dolmadı
   assert.strictEqual(await claudeMod.maybeProbe(pst, staleResult, T + 6 * MIN), null); assert.strictEqual(probeCalls, 1);      // yeni kullanım yok
   pst.upsert('claude', 'c|d', T + 7 * MIN, 'x', 1, 1, 0, 0);
-  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: true, at: T + 6 * MIN }, T + 8 * MIN), null); assert.strictEqual(probeCalls, 1); // değer taze
-  r = await claudeMod.maybeProbe(pst, { ok: false, error: 'x' }, T + 8 * MIN); assert.ok(r && probeCalls === 2);                // sonuç yok + yeni kullanım
-  pst.kv('claudeBackoffUntil', T + 60 * MIN); pst.upsert('claude', 'e|f', T + 14 * MIN, 'x', 1, 1, 0, 0);
-  r = await claudeMod.maybeProbe(pst, { ok: true, at: T + 13 * MIN }, T + 15 * MIN); assert.ok(r && probeCalls === 3);          // hız sınırı beklemesi, değerden sonra yeni kullanım, 5 dk geçti
+  // Eşik 90 sn: 65 saniyelik değer yeni kullanım olsa da taze sayılır, 100 saniyelik değer aday olur (sıklığı yalnızca 5 dk sınırı belirler)
+  const valueAt = T + 7 * MIN - 5000; // c|d olayından 5 sn önceki değer
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: true, at: valueAt }, T + 8 * MIN), null); assert.strictEqual(probeCalls, 1);  // 65 sn: taze
+  r = await claudeMod.maybeProbe(pst, { ok: true, at: valueAt }, T + 8 * MIN + 35000); assert.ok(r && probeCalls === 2);                 // 100 sn: eski + yeni kullanım + 5 dk geçti
+  // Durum satırı dosyasından gelen değer için eşik 15 dk
+  pst.upsert('claude', 'm|n', T + 13 * MIN, 'x', 1, 1, 0, 0); // son ölçümden sonra yeni kullanım
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: true, at: T + 4 * MIN, src: 'statusline' }, T + 14 * MIN), null); assert.strictEqual(probeCalls, 2); // 10 dk
+  r = await claudeMod.maybeProbe(pst, { ok: true, at: T - 6 * MIN, src: 'statusline' }, T + 14 * MIN); assert.ok(r && probeCalls === 3);                       // 20 dk
+  // Sonuç yok + yeni kullanım
+  pst.upsert('claude', 'e|f', T + 19 * MIN, 'x', 1, 1, 0, 0);
+  r = await claudeMod.maybeProbe(pst, { ok: false, error: 'x' }, T + 20 * MIN); assert.ok(r && probeCalls === 4);
+  // Hız sınırı beklemesi: değer 31 sn önce olsa da ölçülür (değerden sonra yeni kullanım var)
+  pst.kv('claudeBackoffUntil', T + 100 * MIN); pst.upsert('claude', 'g|h', T + 25 * MIN, 'x', 1, 1, 0, 0);
+  r = await claudeMod.maybeProbe(pst, { ok: true, at: T + 25 * MIN - 30000 }, T + 25 * MIN + 1000); assert.ok(r && probeCalls === 5);
   // komut yüzde vermiyorsa (eski Claude Code) bir saat denenmez
   cliprobe.measure = async () => { probeCalls++; return { seen: true, limits: null }; };
-  pst.upsert('claude', 'g|h', T + 30 * MIN, 'x', 1, 1, 0, 0);
-  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 31 * MIN), null); assert.strictEqual(probeCalls, 4);
-  pst.upsert('claude', 'i|j', T + 40 * MIN, 'x', 1, 1, 0, 0);
-  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 45 * MIN), null); assert.strictEqual(probeCalls, 4);      // engelli
+  pst.upsert('claude', 'i|j', T + 31 * MIN, 'x', 1, 1, 0, 0);
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 32 * MIN), null); assert.strictEqual(probeCalls, 6);
+  pst.upsert('claude', 'k|l', T + 40 * MIN, 'x', 1, 1, 0, 0);
+  assert.strictEqual(await claudeMod.maybeProbe(pst, { ok: false }, T + 45 * MIN), null); assert.strictEqual(probeCalls, 6);      // engelli
   console.log('tüm testler geçti');
 })().catch((e) => { console.error(e); process.exit(1); });
