@@ -125,6 +125,12 @@ enum ClaudeLimitAPI {
     }
     private static let storeKey = "claudeLastLimits"
 
+    /// Anthropic'in hız sınırı bekleme süresi bitiş saati; bekleme yoksa nil.
+    static var backoffEnd: Date? {
+        let d = Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "claudeBackoffUntil"))
+        return d > Date() ? d : nil
+    }
+
     private static func store(_ l: ClaudeLimits) {
         var d: [String: Double] = ["at": l.fetchedAt.timeIntervalSince1970]
         if let v = l.fiveHourLeft { d["five"] = v }
