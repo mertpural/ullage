@@ -162,6 +162,13 @@ final class AppState: ObservableObject {
             applyThemeIcon()
         }
     }
+    /// Token toplamlarına cache okumalarını da kat (her yerde geçerli; seçim kalıcıdır).
+    @Published var includeCache: Bool = UserDefaults.standard.bool(forKey: "includeCache") {
+        didSet {
+            UserDefaults.standard.set(includeCache, forKey: "includeCache")
+            refresh()
+        }
+    }
     var starterTimer: Timer?
     @Published var starterFireAt: Date?
     @Published var weeklySummaryOn: Bool = UserDefaults.standard.object(forKey: "weeklySummaryOn") as? Bool ?? true {

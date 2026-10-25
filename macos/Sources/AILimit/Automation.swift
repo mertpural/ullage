@@ -63,7 +63,7 @@ enum WeeklySummary {
         guard UserDefaults.standard.string(forKey: key) != stamp else { return }
         UserDefaults.standard.set(stamp, forKey: key)
 
-        let pts = HistoryStore.shared.series(since: lastMon, hourly: false, includeCache: false).filter { $0.bucket < thisMon }
+        let pts = HistoryStore.shared.series(since: lastMon, hourly: false, includeCache: Prefs.includeCache).filter { $0.bucket < thisMon }
         let total = pts.reduce(0) { $0 + $1.tokens }
         guard total > 0 else { return }
         let byDay = Dictionary(grouping: pts, by: { $0.bucket }).mapValues { $0.reduce(0) { $0 + $1.tokens } }

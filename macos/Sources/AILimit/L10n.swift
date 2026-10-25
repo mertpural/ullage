@@ -83,7 +83,7 @@ enum L {
         "Bugün": "Today",
         "EN ÇOK KULLANILAN PROJELER": "TOP PROJECTS", "Son 30 gün · yalnızca Claude Code, klasör adıyla": "Last 30 days · Claude Code only, by folder name",
         "Henüz proje verisi yok.": "No project data yet.",
-        "Paylaşım kartı": "Share card", "Cache dahil": "Include cache", "Hepsi": "All",
+        "Paylaşım kartı": "Share card", "Cache dahil": "Include cache", " · cache dahil": " · incl. cache", "Hepsi": "All",
         "Token kullanımı": "Token usage", " toplam": " total", "Bu aralıkta kayıt yok.": "No records in this range.",
         "Zaman": "Time", "Dağılım": "Breakdown",
         "TOPLAM TOKEN": "TOTAL TOKENS", "tüm zamanlar": "all time", "GÜNCEL SERİ": "CURRENT STREAK", "kesintisiz kullanım": "days in a row",

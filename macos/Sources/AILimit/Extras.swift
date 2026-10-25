@@ -131,7 +131,7 @@ struct ShareCard: View {
                 LogoMark(size: 34, palette: t.logo)
                 Text(AppInfo.name).font(t.font(20, .bold))
                 Spacer()
-                Text(L.t("Son 7 gün")).font(t.font(13)).foregroundStyle(t.sub)
+                Text(L.t("Son 7 gün") + (Prefs.includeCache ? L.t(" · cache dahil") : "")).font(t.font(13)).foregroundStyle(t.sub)
             }
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(formatTokens(data.total)).font(t.font(54, .bold).monospacedDigit())

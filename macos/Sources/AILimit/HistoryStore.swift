@@ -1,10 +1,16 @@
 import Foundation
 import SQLite3
 
+/// Kullanıcının seçtiği, her yerde ortak geçerli ayarlar.
+enum Prefs {
+    /// Açıksa token toplamlarına cache okumaları da eklenir (popover, geçmiş, paylaşım kartı, özet).
+    static var includeCache: Bool { UserDefaults.standard.bool(forKey: "includeCache") }
+}
+
 struct TokenSums {
     var input = 0, output = 0, cacheWrite = 0, cacheRead = 0
-    /// Cache okumaları hariç; "harcanan token" olarak gösterilen değer.
-    var billable: Int { input + output + cacheWrite }
+    /// "Harcanan token" olarak gösterilen değer. Cache okumaları yalnızca kullanıcı "Cache dahil" dediyse eklenir.
+    var billable: Int { input + output + cacheWrite + (Prefs.includeCache ? cacheRead : 0) }
 }
 
 /// Tüm sağlayıcıların token olaylarını kalıcı tutar. Log dosyaları silinse bile geçmiş kalır.
@@ -163,7 +169,7 @@ final class HistoryStore: @unchecked Sendable {
         var st: OpaquePointer?
         defer { sqlite3_finalize(st) }
         sqlite3_prepare_v2(db, """
-        SELECT strftime('%Y-%m-%d', ts, 'unixepoch', 'localtime') d, SUM(input+output+cache_write)
+        SELECT strftime('%Y-%m-%d', ts, 'unixepoch', 'localtime') d, SUM(\(Prefs.includeCache ? "input+output+cache_write+cache_read" : "input+output+cache_write"))
         FROM events WHERE provider=? AND ts>=? GROUP BY d
         """, -1, &st, nil)
         sqlite3_bind_text(st, 1, provider, -1, SQLITE_TRANSIENT)

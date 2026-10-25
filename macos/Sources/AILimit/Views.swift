@@ -379,7 +379,7 @@ struct OverviewCard: View {
                 Text(provider.name).font(t.font(14, .semibold))
                 Spacer()
                 if let tk = usage.todayTokens {
-                    Text(L.f("Bugün %@", formatTokens(tk)))
+                    Text(L.f("Bugün %@", formatTokens(tk)) + (state.includeCache ? L.t(" · cache dahil") : ""))
                         .font(t.font(11)).foregroundStyle(t.sub)
                 }
             }

@@ -24,7 +24,6 @@ enum GroupBy: String, CaseIterable, Identifiable {
 final class HistoryModel: ObservableObject {
     @Published var range: HistoryRange = .week { didSet { reload() } }
     @Published var group: GroupBy = .provider
-    @Published var includeCache = false { didSet { reload() } }
     @Published var filter: String? = nil
     @Published var points: [HistoryStore.Point] = []
     /// "yyyy-MM-dd" -> sağlayıcı -> token (cache hariç), son 3 yıl.
@@ -49,7 +48,7 @@ final class HistoryModel: ObservableObject {
     func loadHeat() {
         let cal = Calendar.current
         let since = cal.date(byAdding: .year, value: -3, to: cal.startOfDay(for: Date()))!
-        let pts = HistoryStore.shared.series(since: since, hourly: false, includeCache: false)
+        let pts = HistoryStore.shared.series(since: since, hourly: false, includeCache: Prefs.includeCache)
         var h: [String: [String: Int]] = [:]
         for p in pts { h[Self.keyFmt.string(from: p.bucket), default: [:]][p.provider, default: 0] += p.tokens }
         heat = h
@@ -94,7 +93,7 @@ final class HistoryModel: ObservableObject {
     init() {
         loadHeat()
         loadTotals()
-        points = HistoryStore.shared.series(since: range.since, hourly: range.hourly, includeCache: includeCache)
+        points = HistoryStore.shared.series(since: range.since, hourly: range.hourly, includeCache: Prefs.includeCache)
     }
 
     func loadTotals() {
@@ -120,8 +119,15 @@ final class HistoryModel: ObservableObject {
         costToday = cost(t0); cost7 = cost(w0); cost30 = cost(m0)
     }
 
+    /// "Cache dahil" değişince tüm toplamlar, ısı haritası ve grafik yeniden hesaplanır.
+    func reloadAll() {
+        loadHeat()
+        loadTotals()
+        reload()
+    }
+
     func reload() {
-        let r = range, c = includeCache
+        let r = range, c = Prefs.includeCache
         Task.detached {
             let pts = HistoryStore.shared.series(since: r.since, hourly: r.hourly, includeCache: c)
             await MainActor.run { self.points = pts }
@@ -216,11 +222,15 @@ struct HistoryPage: View {
             ActivityStats(model: model)
             HeatmapCard(model: model)
 
-            HStack(spacing: 10) {
+            HStack(spacing: 26) {
                 ThemedSegmented(t: t, items: HistoryRange.allCases.map { (L.t($0.rawValue), $0) }, selection: $model.range)
+                // Çerçevesiz temalarda (Kağıt, Terminal) iki seçici birbirine karışmasın diye ince ayraç.
+                if ["paper", "terminal"].contains(t.id) {
+                    Rectangle().fill(t.sub.opacity(0.45)).frame(width: 1, height: 18)
+                }
                 ThemedSegmented(t: t, items: GroupBy.allCases.map { (L.t($0.rawValue), $0) }, selection: $model.group)
-                Spacer(minLength: 12)
-                ThemedCheck(t: t, title: L.t("Cache dahil"), isOn: $model.includeCache)
+                Spacer(minLength: 16)
+                ThemedCheck(t: t, title: L.t("Cache dahil"), isOn: $state.includeCache)
             }
 
             HStack(spacing: 6) {
@@ -296,6 +306,7 @@ struct HistoryPage: View {
             .card(t, padding: 16)
         }
         .onAppear { model.loadHeat(); model.loadTotals(); model.reload() }
+        .onChange(of: state.includeCache) { _, _ in model.reloadAll() }
     }
 
     private func color(for name: String) -> Color {
