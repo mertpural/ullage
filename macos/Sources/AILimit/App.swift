@@ -49,6 +49,23 @@ struct AILimitApp: App {
                         try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("bar_\(th.id).png"))
                     }
                 }
+                // Her temanın onay kutusu, kapalı ve açık.
+                let checks = VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Theme.all) { th in
+                        HStack(spacing: 30) {
+                            ThemedCheck(t: th, title: th.name + " · Cache dahil", isOn: .constant(false))
+                            ThemedCheck(t: th, title: th.name + " · Cache dahil", isOn: .constant(true))
+                        }
+                        .padding(10).frame(width: 440, alignment: .leading).background(th.bg)
+                        .environment(\.colorScheme, th.scheme ?? .dark)
+                    }
+                }
+                let cr = ImageRenderer(content: checks.padding(12).background(Color(white: 0.5)))
+                cr.scale = 2
+                if let img = cr.nsImage, let tiff = img.tiffRepresentation,
+                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("checks.png"))
+                }
                 exit(0)
             } }
         }

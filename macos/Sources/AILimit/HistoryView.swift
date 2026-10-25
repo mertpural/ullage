@@ -224,7 +224,7 @@ struct HistoryPage: View {
                     ForEach(GroupBy.allCases) { Text(L.t($0.rawValue)).tag($0) }
                 }.pickerStyle(.segmented).labelsHidden().frame(width: 180)
                 Spacer(minLength: 12)
-                Toggle(L.t("Cache dahil"), isOn: $model.includeCache).toggleStyle(.checkbox).fixedSize()
+                ThemedCheck(t: t, title: L.t("Cache dahil"), isOn: $model.includeCache)
             }
 
             HStack(spacing: 6) {

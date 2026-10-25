@@ -219,3 +219,69 @@ struct SetupCheckCard: View {
         .card(t, padding: 14)
     }
 }
+
+// MARK: - Temaya uyan onay kutusu
+
+/// Sistemin onay kutusu yerine her temanın kendi diliyle çizilen kutu.
+struct ThemedCheck: View {
+    let t: Theme
+    let title: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            HStack(spacing: 8) {
+                box
+                Text(title).font(t.font(12, .medium)).foregroundStyle(t.text).lineLimit(1)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+    }
+
+    private let size: CGFloat = 18
+
+    @ViewBuilder private var box: some View {
+        switch t.id {
+        case "terminal":
+            Text(isOn ? "[x]" : "[ ]").font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(t.accent)
+        case "brutal":
+            ZStack {
+                Rectangle().fill(Color.black).frame(width: size, height: size).offset(x: 2.5, y: 2.5)
+                Rectangle().fill(isOn ? t.accent : t.card).frame(width: size, height: size)
+                    .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+                if isOn { Image(systemName: "xmark").font(.system(size: 10, weight: .black)).foregroundStyle(.black) }
+            }
+            .frame(width: size + 3, height: size + 3)
+        case "sticker":
+            ZStack {
+                RoundedRectangle(cornerRadius: 6).fill(Color.black).frame(width: size, height: size).offset(x: 1.5, y: 1.5)
+                RoundedRectangle(cornerRadius: 6).fill(isOn ? t.accent : t.card).frame(width: size, height: size)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.black, lineWidth: 2))
+                if isOn { Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)).foregroundStyle(.black) }
+            }
+            .frame(width: size + 2, height: size + 2)
+        case "neon":
+            RoundedRectangle(cornerRadius: 4).stroke(t.accent, lineWidth: 1.5).frame(width: size, height: size)
+                .background(RoundedRectangle(cornerRadius: 4).fill(t.accent.opacity(isOn ? 0.25 : 0)))
+                .shadow(color: t.accent.opacity(isOn ? 0.9 : 0.35), radius: isOn ? 5 : 2)
+                .overlay { if isOn { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(t.accent) } }
+        case "paper":
+            RoundedRectangle(cornerRadius: 2).stroke(t.text.opacity(0.65), lineWidth: 1).frame(width: size - 2, height: size - 2)
+                .overlay { if isOn { Text("✓").font(.system(size: 15, weight: .regular, design: .serif)).foregroundStyle(t.accent).offset(x: 1, y: -2) } }
+        case "glass":
+            RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Color.white.opacity(isOn ? 0.30 : 0.10)).frame(width: size, height: size)
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(Color.white.opacity(isOn ? 0.75 : 0.35), lineWidth: 1))
+                .overlay { if isOn { Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white) } }
+        case "light":
+            RoundedRectangle(cornerRadius: 5).fill(isOn ? t.accent : Color.clear).frame(width: size, height: size)
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(isOn ? t.accent : t.sub, lineWidth: 1.5))
+                .overlay { if isOn { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.white) } }
+        default:   // sistem ve koyu
+            RoundedRectangle(cornerRadius: 5).fill(isOn ? t.accent : t.card).frame(width: size, height: size)
+                .overlay(RoundedRectangle(cornerRadius: 5).stroke(isOn ? t.accent : t.sub.opacity(0.75), lineWidth: 1.5))
+                .overlay { if isOn { Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(.white) } }
+        }
+    }
+}
