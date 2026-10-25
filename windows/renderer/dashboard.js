@@ -7,7 +7,7 @@
   const colorOf = (id) => (PROVIDERS.find((p) => p.id === id) || {}).color || '#888';
   const nameOf = (id) => (PROVIDERS.find((p) => p.id === id) || {}).name || id;
   let S = null, H = null;
-  const ui = { range: '7d', group: 'provider', cache: false, filter: null, hover: null };
+  const ui = { range: '7d', group: 'provider', filter: null, hover: null, get cache() { return !!(S && S.settings.usageCache); } };
 
   // ---- yardımcılar
   const p2 = (n) => String(n).padStart(2, '0');
@@ -18,7 +18,7 @@
 
   function dayMap() { // gün -> sağlayıcı -> token (cache hariç)
     const m = {};
-    for (const r of H.daily) { (m[r.bucket] = m[r.bucket] || {})[r.provider] = ((m[r.bucket] || {})[r.provider] || 0) + r.tokens; }
+    for (const r of H.daily) { (m[r.bucket] = m[r.bucket] || {})[r.provider] = ((m[r.bucket] || {})[r.provider] || 0) + (ui.cache ? r.tokensWithCache : r.tokens); }
     return m;
   }
   const dayTotal = (m, key) => { const d = m[key]; if (!d) return 0; return ui.filter ? (d[ui.filter] || 0) : Object.values(d).reduce((a, b) => a + b, 0); };
@@ -60,7 +60,7 @@
     ctrl.append(seg([['24h', '24 saat'], ['7d', '7 gün'], ['30d', '30 gün']], ui.range, (v) => { ui.range = v; render(); }),
       seg([['provider', 'Sağlayıcı'], ['model', 'Model']], ui.group, (v) => { ui.group = v; render(); }));
     const cb = el('label', null, `<input type="checkbox" ${ui.cache ? 'checked' : ''}> Cache dahil`); cb.style.cssText = 'margin-left:auto;font-size:12px;cursor:pointer';
-    cb.querySelector('input').onchange = (e) => { ui.cache = e.target.checked; render(); }; ctrl.append(cb);
+    cb.querySelector('input').onchange = (e) => window.ullage.setSettings({ usageCache: e.target.checked }); ctrl.append(cb);
     main.append(ctrl);
     const fl = el('div', 'ctrl'); fl.style.margin = '0 0 10px';
     const pill = (id, label) => { const b = el('button', 'pill' + (ui.filter === id ? ' on' : ''), label); b.onclick = () => { ui.filter = id; render(); }; return b; };

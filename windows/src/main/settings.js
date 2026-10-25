@@ -15,6 +15,7 @@ const DEFAULTS = {
   widget: false,       // her zaman üstte küçük yüzen pencere
   widgetPos: null,     // { x, y } son konum
   widgetScale: 1,      // widget boyutu: 0.7 ile 1.8 arası çarpan
+  usageCache: false,   // Kullanım sayfasında "Cache dahil" seçimi
 };
 
 class Settings {
