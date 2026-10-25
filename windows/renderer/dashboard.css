@@ -52,7 +52,7 @@ select { font: inherit; color: var(--text); background: var(--card); border: var
 .prov .body { flex: 1; min-width: 0; }
 .prov .body b { font-size: 14px; }
 .prov .notes { font-size: 10px; color: var(--sub); margin-top: 4px; }
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
 .tcard { padding: 8px; border-radius: 16px; background: var(--card); border: 2px solid transparent; cursor: pointer; }
 .tcard.on { border-color: var(--accent); }
 .tcard .pv { height: 74px; padding: 10px; display: flex; flex-direction: column; gap: 8px; justify-content: space-between; }
