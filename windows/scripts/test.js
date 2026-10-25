@@ -110,8 +110,10 @@ assert.strictEqual(claudebin.desktopBundled({ ...noPath, APPDATA: path.join(cbRo
 const found = claudebin.resolve({ ...noPath, LOCALAPPDATA: path.join(cbRoot, 'l') });
 assert.strictEqual(found.kind, 'desktop'); assert.strictEqual(found.file, newest); assert.strictEqual(found.shell, false);
 // PATH'te claude varsa o tercih edilir
-mk('bin', 'claude.cmd');
-assert.strictEqual(claudebin.resolve({ PATH: path.join(cbRoot, 'bin'), PATHEXT: '.EXE;.CMD', LOCALAPPDATA: path.join(cbRoot, 'l') }).kind, 'path');
+if (process.platform === 'win32') { // .cmd uzantısı PATHEXT'e göre yalnızca Windows'ta aranır
+  mk('bin', 'claude.cmd');
+  assert.strictEqual(claudebin.resolve({ PATH: path.join(cbRoot, 'bin'), PATHEXT: '.EXE;.CMD', LOCALAPPDATA: path.join(cbRoot, 'l') }).kind, 'path');
+}
 // komut satırı: kabukta boş değer ve boşluklu argüman tırnaklı, doğrudan çalıştırmada dizi olarak
 assert.strictEqual(claudebin.spec({ file: 'claude', shell: true }, ['-p', '.', '--tools', '', 'a b'])[0], 'claude -p "." --tools "" "a b"');
 assert.deepStrictEqual(claudebin.spec({ file: 'C:\\x y\\claude.exe', shell: false }, ['-p', ''])[1], ['-p', '']);
