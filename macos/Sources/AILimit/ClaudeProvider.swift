@@ -116,9 +116,9 @@ enum ClaudeLimitAPI {
     /// Elle yenilemede önbelleği atlar, ama 30 saniyeden sık sorgu yapılmaz (Anthropic hız sınırı).
     static func invalidate() {
         lock.lock(); defer { lock.unlock() }
-        // Elle yenileme en sık 2 dakikada bir gerçek sorgu yapar.
+        // Elle yenileme de Claude için en sık dakikada bir gerçek sorgu yapar (senkron süresi ne olursa olsun).
         let last = UserDefaults.standard.double(forKey: lastAttemptKey)
-        if Date().timeIntervalSince1970 - last > 30 {
+        if Date().timeIntervalSince1970 - last > minInterval {
             cached = nil
             UserDefaults.standard.set(0, forKey: lastAttemptKey)
         }
