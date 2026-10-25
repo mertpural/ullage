@@ -47,22 +47,58 @@ enum Notifier {
     }
 }
 
+// MARK: - Haftalık özet
+
+enum WeeklySummary {
+    private static let key = "weeklySummaryWeek"
+
+    /// Pazartesi 09:00'dan sonra, her hafta bir kez: geçen Pazartesi-Pazar arası özeti.
+    static func sendIfDue(now: Date = Date()) {
+        var cal = Calendar(identifier: .gregorian)
+        cal.firstWeekday = 2
+        guard cal.component(.weekday, from: now) == 2, cal.component(.hour, from: now) >= 9,
+              let thisMon = cal.dateInterval(of: .weekOfYear, for: now)?.start,
+              let lastMon = cal.date(byAdding: .day, value: -7, to: thisMon) else { return }
+        let stamp = "\(Int(thisMon.timeIntervalSince1970))"
+        guard UserDefaults.standard.string(forKey: key) != stamp else { return }
+        UserDefaults.standard.set(stamp, forKey: key)
+
+        let pts = HistoryStore.shared.series(since: lastMon, hourly: false, includeCache: false).filter { $0.bucket < thisMon }
+        let total = pts.reduce(0) { $0 + $1.tokens }
+        guard total > 0 else { return }
+        let byDay = Dictionary(grouping: pts, by: { $0.bucket }).mapValues { $0.reduce(0) { $0 + $1.tokens } }
+        let byProv = Dictionary(grouping: pts, by: { $0.provider }).mapValues { $0.reduce(0) { $0 + $1.tokens } }
+        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "EEEE"
+        var text = "Geçen hafta \(formatTokens(total)) token."
+        if let d = byDay.max(by: { $0.value < $1.value }) { text += " En yoğun gün \(f.string(from: d.key)) (\(formatTokens(d.value)))."}
+        if let p = byProv.max(by: { $0.value < $1.value }).flatMap({ Provider(rawValue: $0.key) }) { text += " En çok \(p.name)." }
+        Notifier.send("Ullage haftalık özet", text)
+    }
+}
+
 // MARK: - Pencere başlatıcı
 
 /// 5 saatlik pencere, hesabın pencere dışındaki ilk isteğiyle başlar. Pencere bittiğinde en ucuz modele
 /// çok kısa bir istek gönderip yeni pencereyi erken başlatır, böylece sıfırlanma saati öne kayar.
-/// Ek limit vermez; yalnızca pencerenin ne zaman başlayıp biteceğini belirler. Kullanıcı açarsa çalışır.
+/// Ek limit vermez; yalnızca pencerenin ne zaman başlayıp biteceğini belirler. Kullanıcı açarsa çalışır; saat sınırı yoktur.
+/// Sürekli yoklamaz: sıfırlanma saati limit bilgisinden okunur, o ana tek bir zamanlayıcı kurulur ve
+/// o anda tek istek gönderilir.
 enum WindowStarter {
     static let lastKey = "starterLast"
+    static let tryKey = "starterTry"
 
-    static func shouldStart(_ u: Usage, now: Date, startHour: Int, endHour: Int) -> Bool {
+    /// Zamanlayıcının çalışacağı an: sıfırlanmadan hemen sonra.
+    static func nextFire(_ u: Usage, now: Date) -> Date? {
+        guard u.limitConfidence == .exact, let f = u.fiveRow, let r = f.reset, r > now else { return nil }
+        return r.addingTimeInterval(15)
+    }
+
+    static func shouldStart(_ u: Usage, now: Date) -> Bool {
         guard u.limitConfidence == .exact, let f = u.fiveRow, f.left >= 0.999 else { return false }
         if let r = f.reset, r > now { return false }
-        let hour = Calendar.current.component(.hour, from: now)
-        let inside = startHour <= endHour ? (hour >= startHour && hour < endHour) : (hour >= startHour || hour < endHour)
-        guard inside else { return false }
-        let last = UserDefaults.standard.double(forKey: lastKey)
-        return now.timeIntervalSince1970 - last > 4.5 * 3600
+        let d = UserDefaults.standard
+        guard now.timeIntervalSince1970 - d.double(forKey: tryKey) > 15 * 60 else { return false }
+        return now.timeIntervalSince1970 - d.double(forKey: lastKey) > 4.5 * 3600
     }
 
     static var cliPath: String? {
@@ -74,6 +110,7 @@ enum WindowStarter {
     /// Haiku'ya tek satırlık istek gönderir, oturum kaydı bırakmaz. Dönen metin durum mesajıdır.
     static func ping() -> (ok: Bool, message: String) {
         guard let cli = cliPath else { return (false, "claude komutu bulunamadı") }
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: tryKey)
         let p = Process()
         p.executableURL = URL(fileURLWithPath: cli)
         p.arguments = ["-p", "--model", "haiku", "--no-session-persistence", "--tools", "", "--", "Reply with only: ok"]

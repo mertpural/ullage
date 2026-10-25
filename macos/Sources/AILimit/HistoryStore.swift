@@ -190,3 +190,27 @@ final class HistoryStore: @unchecked Sendable {
 }
 
 private let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
+extension HistoryStore {
+    /// Model başına dört token türünün toplamı (maliyet tahmini için).
+    func modelSums(since: Date) -> [(model: String, sums: TokenSums)] {
+        lock.lock(); defer { lock.unlock() }
+        var st: OpaquePointer?
+        defer { sqlite3_finalize(st) }
+        sqlite3_prepare_v2(db, """
+        SELECT model, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read)
+        FROM events WHERE ts>=? GROUP BY model
+        """, -1, &st, nil)
+        sqlite3_bind_double(st, 1, since.timeIntervalSince1970)
+        var out: [(String, TokenSums)] = []
+        while sqlite3_step(st) == SQLITE_ROW {
+            var s = TokenSums()
+            s.input = Int(sqlite3_column_int64(st, 1))
+            s.output = Int(sqlite3_column_int64(st, 2))
+            s.cacheWrite = Int(sqlite3_column_int64(st, 3))
+            s.cacheRead = Int(sqlite3_column_int64(st, 4))
+            out.append((sqlite3_column_text(st, 0).map { String(cString: $0) } ?? "", s))
+        }
+        return out
+    }
+}

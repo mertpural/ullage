@@ -40,6 +40,9 @@ final class HistoryModel: ObservableObject {
     @Published var last7 = 0
     @Published var prev7 = 0
     @Published var last30 = 0
+    @Published var costToday = 0.0
+    @Published var cost7 = 0.0
+    @Published var cost30 = 0.0
 
     static let keyFmt: DateFormatter = { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f }()
 
@@ -111,6 +114,10 @@ final class HistoryModel: ObservableObject {
             a[4] += s.sums(provider: p, since: m0).billable
         }
         today = a[0]; yesterday = a[1] - a[0]; last7 = a[2]; prev7 = a[3] - a[2]; last30 = a[4]
+        func cost(_ since: Date) -> Double {
+            HistoryStore.shared.modelSums(since: since).reduce(0) { $0 + Pricing.cost(model: $1.model, $1.sums) }
+        }
+        costToday = cost(t0); cost7 = cost(w0); cost30 = cost(m0)
     }
 
     func reload() {
@@ -165,6 +172,31 @@ struct StatCard: View {
     }
 }
 
+struct CostCard: View {
+    @EnvironmentObject var state: AppState
+    @ObservedObject var model: HistoryModel
+
+    var body: some View {
+        let t = state.theme
+        HStack(alignment: .center, spacing: 22) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("TAHMİNİ API MALİYETİ").font(t.font(10, .bold)).foregroundStyle(t.sub)
+                Text("Aynı token'ları API fiyatıyla alsaydın ödeyeceğin tutar. Abonelik ücretin değil, tahminidir.")
+                    .font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            ForEach([("Bugün", model.costToday), ("7 gün", model.cost7), ("30 gün", model.cost30)], id: \.0) { item in
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("~" + Pricing.format(item.1)).font(t.font(18, .bold).monospacedDigit())
+                    Text(item.0).font(t.font(10)).foregroundStyle(t.sub)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card(t, padding: 14)
+    }
+}
+
 struct HistoryPage: View {
     @EnvironmentObject var state: AppState
     @StateObject private var model = HistoryModel()
@@ -179,6 +211,7 @@ struct HistoryPage: View {
                 StatCard(title: "SON 30 GÜN", value: model.last30, compareTo: nil, compareLabel: "")
             }
 
+            CostCard(model: model)
             ActivityStats(model: model)
             HeatmapCard(model: model)
 

@@ -28,6 +28,8 @@ struct AILimitApp: App {
                 for (i, p) in Provider.allCases.enumerated() {
                     var u = Usage(fiveHourLeft: 0.77 - Double(i) * 0.12, weeklyLeft: 0.48 + Double(i) * 0.1, limitConfidence: .exact)
                     u.todayTokens = 1_000_000
+                    u.fiveHourReset = Date().addingTimeInterval(4 * 3600)
+                    u.weeklyReset = Date().addingTimeInterval(5 * 86400)
                     st.usage[p] = u
                 }
                 st.enabled = Set(Provider.allCases)

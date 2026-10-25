@@ -300,6 +300,21 @@ struct Pace {
     }
 }
 
+extension Pace {
+    /// Şimdiki harcama hızı sürerse limitin biteceği an; pencere bitmeden dolmayacaksa nil.
+    static func exhaustion(_ row: LimitRow, window: TimeInterval, now: Date = Date()) -> Date? {
+        guard let reset = row.reset, reset > now, row.left > 0.001 else { return nil }
+        let remaining = reset.timeIntervalSince(now)
+        guard remaining <= window + 60 else { return nil }
+        let elapsed = window - remaining
+        let used = 1 - row.left
+        guard elapsed / window >= 0.08, used >= 0.03 else { return nil }
+        let eta = row.left / (used / elapsed)
+        let at = now.addingTimeInterval(eta)
+        return at < reset.addingTimeInterval(-60) ? at : nil
+    }
+}
+
 func statusWord(_ left: Double) -> (String, Color) {
     if left > 0.4 { return ("Sağlıklı", .green) }
     if left > 0.15 { return ("Dikkat", .orange) }

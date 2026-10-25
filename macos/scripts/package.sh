@@ -3,7 +3,7 @@
 # açınca kod imzası bozulur ve uygulama açılmaz.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-./scripts/build_app.sh
+ULLAGE_PACKAGING=1 ./scripts/build_app.sh
 ditto -c -k --norsrc --noextattr --keepParent build/Ullage.app build/release-mac.zip
 echo "Hazır: build/release-mac.zip (GitHub'a yüklerken Ullage.zip adıyla kopyalanır)"
 

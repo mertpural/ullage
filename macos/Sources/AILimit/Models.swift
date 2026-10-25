@@ -147,13 +147,12 @@ final class AppState: ObservableObject {
     @Published var starterOn: Bool = UserDefaults.standard.bool(forKey: "starterOn") {
         didSet { UserDefaults.standard.set(starterOn, forKey: "starterOn") }
     }
-    @Published var starterStart: Int = UserDefaults.standard.object(forKey: "starterStart") as? Int ?? 7 {
-        didSet { UserDefaults.standard.set(starterStart, forKey: "starterStart") }
-    }
-    @Published var starterEnd: Int = UserDefaults.standard.object(forKey: "starterEnd") as? Int ?? 23 {
-        didSet { UserDefaults.standard.set(starterEnd, forKey: "starterEnd") }
-    }
     @Published var starterStatus = ""
+    var starterTimer: Timer?
+    @Published var starterFireAt: Date?
+    @Published var weeklySummaryOn: Bool = UserDefaults.standard.object(forKey: "weeklySummaryOn") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(weeklySummaryOn, forKey: "weeklySummaryOn") }
+    }
     @Published var launchAtLogin = LoginItem.enabled
     @Published var themeId: String = UserDefaults.standard.string(forKey: "themeId") ?? "system" {
         didSet {
@@ -256,10 +255,8 @@ final class AppState: ObservableObject {
                 self.usage[.antigravity] = anti
                 self.usage[.gemini] = gemini
                 if self.notificationsOn { Notifier.check(old: old, new: self.usage) }
-                if self.starterOn,
-                   WindowStarter.shouldStart(claude, now: Date(), startHour: self.starterStart, endHour: self.starterEnd) {
-                    self.startWindow()
-                }
+                self.scheduleStarter(claude)
+                if self.weeklySummaryOn && self.notificationsOn { WeeklySummary.sendIfDue() }
             }
         }
     }
@@ -281,6 +278,53 @@ final class AppState: ObservableObject {
         let popover = NSApp.keyWindow   // açılan menü çubuğu penceresi
         DashboardWindow.show(state: self)
         popover?.orderOut(nil)
+    }
+
+    private static let dayTime: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "EEE HH:mm"; return f
+    }()
+    private static let clock: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
+    }()
+
+    /// Saati bugünse yalnızca "HH:mm", değilse gün kısaltmasıyla yazar.
+    static func whenText(_ d: Date) -> String {
+        Calendar.current.isDateInToday(d) ? clock.string(from: d) : dayTime.string(from: d)
+    }
+
+    /// Kartın altında gösterilen kısa notlar: limitin ne zaman biteceği ve sonraki otomatik mesaj.
+    func footnotes(_ p: Provider, _ u: Usage) -> [String] {
+        var out: [String] = []
+        if u.staleSince == nil {
+            var parts: [String] = []
+            if let f = u.fiveRow, let at = Pace.exhaustion(f, window: 5 * 3600) { parts.append("5 saatlik \(Self.whenText(at))") }
+            if let w = u.weekRow, let at = Pace.exhaustion(w, window: 7 * 86400) { parts.append("haftalık \(Self.whenText(at))") }
+            if !parts.isEmpty { out.append("Bu hızla biter: " + parts.joined(separator: ", ")) }
+        }
+        if p == .claude, starterOn, let at = starterFireAt { out.append("Sonraki otomatik mesaj: \(Self.whenText(at))") }
+        return out
+    }
+
+    /// Sıfırlanma saatine tek seferlik zamanlayıcı kurar; her yenilemede yalnızca saat değiştiyse yeniden kurulur.
+    /// Sıfırlanma çoktan geçmişse (uygulama geç açıldıysa) bir kez hemen dener.
+    @MainActor func scheduleStarter(_ claude: Usage) {
+        guard starterOn else { starterTimer?.invalidate(); starterTimer = nil; starterFireAt = nil; return }
+        let now = Date()
+        if let at = WindowStarter.nextFire(claude, now: now) {
+            if let cur = starterFireAt, abs(cur.timeIntervalSince(at)) < 60, starterTimer?.isValid == true { return }
+            starterTimer?.invalidate()
+            starterFireAt = at
+            starterTimer = Timer.scheduledTimer(withTimeInterval: max(1, at.timeIntervalSince(now)), repeats: false) { [weak self] _ in
+                Task { @MainActor in
+                    self?.starterTimer = nil
+                    self?.starterFireAt = nil
+                    self?.startWindow()
+                }
+            }
+            starterTimer?.tolerance = 5
+        } else if starterTimer == nil, WindowStarter.shouldStart(claude, now: now) {
+            startWindow()
+        }
     }
 
     /// Claude'un yeni 5 saatlik penceresini hemen başlatır.

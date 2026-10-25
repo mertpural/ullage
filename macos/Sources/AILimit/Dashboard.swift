@@ -283,10 +283,19 @@ struct AppearancePage: View {
 struct AutomationPage: View {
     @EnvironmentObject var state: AppState
 
+    private var starterNote: String {
+        guard state.starterOn else { return "" }
+        if let at = state.starterFireAt { return " Sonraki otomatik mesaj: \(AppState.whenText(at))." }
+        return " Sıfırlanma saati bekleniyor."
+    }
+
     var body: some View {
         let t = state.theme
         SettingRow(title: "Limit bildirimleri", subtitle: "Kalan %15 ve %5'in altına inince, ayrıca limit yenilenince bildirim gönderir.") {
             Toggle("", isOn: $state.notificationsOn).toggleStyle(.switch).labelsHidden()
+        }
+        SettingRow(title: "Haftalık özet", subtitle: "Pazartesi sabahı geçen haftanın toplam token'ını, en yoğun gününü ve en çok kullandığın aracı bildirir. Bildirimler kapalıysa gelmez.") {
+            Toggle("", isOn: $state.weeklySummaryOn).toggleStyle(.switch).labelsHidden()
         }
         SettingRow(title: "Girişte otomatik başlat", subtitle: "Mac'e giriş yapınca uygulama kendiliğinden açılır.") {
             Toggle("", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
@@ -295,19 +304,8 @@ struct AutomationPage: View {
         SettingRow(title: "Claude oturumunu otomatik yenile", subtitle: "Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.") {
             Toggle("", isOn: $state.refreshLogin).toggleStyle(.switch).labelsHidden()
         }
-        SettingRow(title: "Claude pencere başlatıcı", subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.") {
+        SettingRow(title: "Claude pencere başlatıcı", subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.\(starterNote)") {
             Toggle("", isOn: $state.starterOn).toggleStyle(.switch).labelsHidden()
-        }
-        if state.starterOn {
-            SettingRow(title: "Çalışma saatleri", subtitle: "Başlatıcı yalnızca bu saatler arasında istek gönderir.") {
-                HStack(spacing: 14) {
-                    Stepper("Başlangıç \(state.starterStart):00", value: $state.starterStart, in: 0...23)
-                    Stepper("Bitiş \(state.starterEnd):00", value: $state.starterEnd, in: 0...24)
-                }
-            }
-        }
-        SettingRow(title: "Şimdi başlat", subtitle: state.starterStatus.isEmpty ? "Yeni bir 5 saatlik pencereyi hemen başlatır." : state.starterStatus) {
-            Button("Başlat") { state.startWindow() }
         }
     }
 }

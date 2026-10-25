@@ -226,12 +226,17 @@ struct PopoverView: View {
         if visible.isEmpty { return 40 }
         let showAll = state.selectedTab == "all" || Provider(rawValue: state.selectedTab).map({ !state.enabled.contains($0) }) ?? true
         if showAll {
-            let cards = visible.map { (state.usage[$0]?.rows.isEmpty ?? true) ? CGFloat(78) : CGFloat(128) }
+            let cards = visible.map { p -> CGFloat in
+                let u = state.usage[p]
+                let notes = CGFloat(u.map { state.footnotes(p, $0).count } ?? 0) * (FootnoteLines.lineHeight + 10)
+                return ((u?.rows.isEmpty ?? true) ? CGFloat(78) : CGFloat(128)) + notes
+            }
             return cards.reduce(0, +) + CGFloat(max(0, cards.count - 1)) * 10
         }
         guard let p = Provider(rawValue: state.selectedTab), let u = state.usage[p] else { return 120 }
         var h: CGFloat = 40
         if u.rows.isEmpty { return h + 80 }
+        h += CGFloat(state.footnotes(p, u).count) * (FootnoteLines.lineHeight + 10)
         if u.fiveRow != nil || u.weekRow != nil { h += 160 }
         if u.extra.count > 2 || !u.otherRows.isEmpty { h += 36 + CGFloat(u.extra.count) * 34 }
         if u.todayTokens != nil { h += 120 }
@@ -392,8 +397,24 @@ struct OverviewCard: View {
             if let st = usage.staleSince {
                 Text("Eski değer: \(PopoverView.time.string(from: st)) (güncellenemedi)").font(t.font(10)).foregroundStyle(.orange)
             }
+            FootnoteLines(provider: provider, usage: usage)
         }
         .card(t)
+    }
+}
+
+/// Karttaki ek not satırları. Her satırın yüksekliği `FootnoteLines.lineHeight`, açılır pencere boyu buna göre hesaplanır.
+struct FootnoteLines: View {
+    @EnvironmentObject var state: AppState
+    let provider: Provider
+    let usage: Usage
+    static let lineHeight: CGFloat = 14
+
+    var body: some View {
+        let t = state.theme
+        ForEach(Array(state.footnotes(provider, usage).enumerated()), id: \.offset) { _, line in
+            Text(line).font(t.font(10)).foregroundStyle(t.sub).lineLimit(1).minimumScaleFactor(0.8)
+        }
     }
 }
 
@@ -504,6 +525,8 @@ struct ProviderDetail: View {
                     if let w = usage.weekRow { MetricCard(title: "HAFTALIK", icon: "calendar", row: w, window: 7 * 86400) }
                 }
             }
+
+            FootnoteLines(provider: provider, usage: usage)
 
             if usage.extra.count > 2 || !usage.otherRows.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {

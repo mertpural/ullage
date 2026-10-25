@@ -46,4 +46,9 @@ LEGACY="../build/$APP_NAME.app"
 if [ -d "$LEGACY" ]; then
   ditto "$APP" "$LEGACY"
   echo "Eski konum da güncellendi: $LEGACY"
+  # Derleme çıktısı ikinci bir "Ullage.app" olarak kalmasın (Spotlight'ta çift görünür). Paketleme zip için ona ihtiyaç duyar.
+  if [ -z "${ULLAGE_PACKAGING:-}" ]; then
+    rm -rf build/stage
+    mv "$APP" build/stage
+  fi
 fi
