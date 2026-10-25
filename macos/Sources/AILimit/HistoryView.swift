@@ -153,7 +153,7 @@ struct StatCard: View {
     var body: some View {
         let t = state.theme
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(t.font(10, .bold)).foregroundStyle(t.sub)
+            Text(L.t(title)).font(t.font(10, .bold)).foregroundStyle(t.sub)
             Text(formatTokens(value)).font(t.font(26, .bold).monospacedDigit())
             if let c = compareTo, c > 0 {
                 let d = Double(value - c) / Double(c)
@@ -180,15 +180,15 @@ struct CostCard: View {
         let t = state.theme
         HStack(alignment: .center, spacing: 22) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("TAHMİNİ API MALİYETİ").font(t.font(10, .bold)).foregroundStyle(t.sub)
-                Text("Aynı token'ları API fiyatıyla alsaydın ödeyeceğin tutar. Abonelik ücretin değil, tahminidir.")
+                Text(L.t("TAHMİNİ API MALİYETİ")).font(t.font(10, .bold)).foregroundStyle(t.sub)
+                Text(L.t("Aynı token'ları API fiyatıyla alsaydın ödeyeceğin tutar. Abonelik ücretin değil, tahminidir."))
                     .font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             ForEach([("Bugün", model.costToday), ("7 gün", model.cost7), ("30 gün", model.cost30)], id: \.0) { item in
                 VStack(alignment: .trailing, spacing: 0) {
                     Text("~" + Pricing.format(item.1)).font(t.font(18, .bold).monospacedDigit())
-                    Text(item.0).font(t.font(10)).foregroundStyle(t.sub)
+                    Text(L.t(item.0)).font(t.font(10)).foregroundStyle(t.sub)
                 }
             }
         }
@@ -205,29 +205,30 @@ struct HistoryPage: View {
         let t = state.theme
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
-                StatCard(title: "BUGÜN", value: model.today, compareTo: model.yesterday, compareLabel: "düne göre")
-                StatCard(title: "DÜN", value: model.yesterday, compareTo: nil, compareLabel: "")
-                StatCard(title: "SON 7 GÜN", value: model.last7, compareTo: model.prev7, compareLabel: "önceki haftaya göre")
-                StatCard(title: "SON 30 GÜN", value: model.last30, compareTo: nil, compareLabel: "")
+                StatCard(title: L.t("BUGÜN"), value: model.today, compareTo: model.yesterday, compareLabel: L.t("düne göre"))
+                StatCard(title: L.t("DÜN"), value: model.yesterday, compareTo: nil, compareLabel: "")
+                StatCard(title: L.t("SON 7 GÜN"), value: model.last7, compareTo: model.prev7, compareLabel: L.t("önceki haftaya göre"))
+                StatCard(title: L.t("SON 30 GÜN"), value: model.last30, compareTo: nil, compareLabel: "")
             }
 
             CostCard(model: model)
+            ProjectsCard()
             ActivityStats(model: model)
             HeatmapCard(model: model)
 
             HStack(spacing: 10) {
                 Picker("", selection: $model.range) {
-                    ForEach(HistoryRange.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(HistoryRange.allCases) { Text(L.t($0.rawValue)).tag($0) }
                 }.pickerStyle(.segmented).labelsHidden().frame(width: 260)
                 Picker("", selection: $model.group) {
-                    ForEach(GroupBy.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(GroupBy.allCases) { Text(L.t($0.rawValue)).tag($0) }
                 }.pickerStyle(.segmented).labelsHidden().frame(width: 180)
-                Spacer()
-                Toggle("Cache dahil", isOn: $model.includeCache).toggleStyle(.checkbox)
+                Spacer(minLength: 12)
+                Toggle(L.t("Cache dahil"), isOn: $model.includeCache).toggleStyle(.checkbox).fixedSize()
             }
 
             HStack(spacing: 6) {
-                Pill(t: t, selected: model.filter == nil, action: { model.filter = nil }) { Text("Hepsi").font(t.font(11, .medium)) }
+                Pill(t: t, selected: model.filter == nil, action: { model.filter = nil }) { Text(L.t("Hepsi")).font(t.font(11, .medium)) }
                 ForEach(["claude", "codex", "antigravity"], id: \.self) { id in
                     if let p = Provider(rawValue: id) {
                         Pill(t: t, selected: model.filter == id, action: { model.filter = id }) {
@@ -235,17 +236,19 @@ struct HistoryPage: View {
                         }
                     }
                 }
-                Spacer()
+                Spacer(minLength: 12)
+                Pill(t: t, action: { Exporter.saveShareCard(state: state) }) { Label(L.t("Paylaşım kartı"), systemImage: "square.and.arrow.up").font(t.font(11, .medium)) }
+                Pill(t: t, action: { Exporter.saveCSV() }) { Label(L.t("CSV"), systemImage: "tablecells").font(t.font(11, .medium)) }
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Token kullanımı").font(t.font(13, .semibold))
+                    Text(L.t("Token kullanımı")).font(t.font(13, .semibold))
                     Spacer()
-                    Text(formatTokens(model.totals.reduce(0) { $0 + $1.1 }) + " toplam").font(t.font(12)).foregroundStyle(t.sub)
+                    Text(formatTokens(model.totals.reduce(0) { $0 + $1.1 }) + L.t(" toplam")).font(t.font(12)).foregroundStyle(t.sub)
                 }
                 if model.filtered.isEmpty {
-                    Text("Bu aralıkta kayıt yok.").foregroundStyle(t.sub)
+                    Text(L.t("Bu aralıkta kayıt yok.")).foregroundStyle(t.sub)
                         .frame(maxWidth: .infinity, minHeight: 240)
                 } else {
                     Chart(model.filtered) { p in
@@ -276,7 +279,7 @@ struct HistoryPage: View {
             .card(t, padding: 16)
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Dağılım").font(t.font(13, .semibold))
+                Text(L.t("Dağılım")).font(t.font(13, .semibold))
                 let total = max(1, model.totals.reduce(0) { $0 + $1.1 })
                 ForEach(model.totals, id: \.0) { name, tokens in
                     HStack(spacing: 10) {
@@ -318,17 +321,17 @@ struct ActivityStats: View {
         let s = model.streaks
         let avg = s.activeDays > 0 ? model.heat.keys.reduce(0) { $0 + model.dayTotal($1) } / s.activeDays : 0
         HStack(spacing: 12) {
-            Stat(title: "TOPLAM TOKEN", value: formatTokens(model.allTime), sub: "tüm zamanlar", icon: "sum")
-            Stat(title: "GÜNCEL SERİ", value: "\(s.current) gün", sub: s.current > 0 ? "kesintisiz kullanım" : "bugün kullanım yok", icon: "flame.fill")
-            Stat(title: "EN UZUN SERİ", value: "\(s.longest) gün", sub: "\(s.activeDays) aktif gün", icon: "trophy.fill")
-            Stat(title: "EN YOĞUN GÜN", value: formatTokens(s.bestTokens), sub: s.bestKey.map(Self.pretty) ?? "–", icon: "bolt.fill")
-            Stat(title: "GÜNLÜK ORT.", value: formatTokens(avg), sub: "aktif gün başına", icon: "chart.line.uptrend.xyaxis")
+            Stat(title: L.t("TOPLAM TOKEN"), value: formatTokens(model.allTime), sub: L.t("tüm zamanlar"), icon: "sum")
+            Stat(title: L.t("GÜNCEL SERİ"), value: L.f("%lld gün", s.current), sub: s.current > 0 ? L.t("kesintisiz kullanım") : L.t("bugün kullanım yok"), icon: "flame.fill")
+            Stat(title: L.t("EN UZUN SERİ"), value: L.f("%lld gün", s.longest), sub: L.f("%lld aktif gün", s.activeDays), icon: "trophy.fill")
+            Stat(title: L.t("EN YOĞUN GÜN"), value: formatTokens(s.bestTokens), sub: s.bestKey.map(Self.pretty) ?? "–", icon: "bolt.fill")
+            Stat(title: L.t("GÜNLÜK ORT."), value: formatTokens(avg), sub: L.t("aktif gün başına"), icon: "chart.line.uptrend.xyaxis")
         }
     }
 
     static func pretty(_ key: String) -> String {
         guard let d = HistoryModel.keyFmt.date(from: key) else { return key }
-        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "d MMM yyyy"
+        let f = DateFormatter(); f.locale = L.locale; f.dateFormat = "d MMM yyyy"
         return f.string(from: d)
     }
 }
@@ -348,7 +351,7 @@ struct Stat: View {
                 Text(title).font(t.font(9, .bold)).foregroundStyle(t.sub)
             }
             Text(value).font(t.font(20, .bold).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.7)
-            Text(sub).font(t.font(10)).foregroundStyle(t.sub).lineLimit(1)
+            Text(L.t(sub)).font(t.font(10)).foregroundStyle(t.sub).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(t, padding: 12)
@@ -416,17 +419,17 @@ struct HeatmapCard: View {
 
     private var readout: String {
         guard let k = model.hoverKey, let d = HistoryModel.keyFmt.date(from: k) else {
-            return "Bir günün üzerine gel, o günkü kullanımı gör."
+            return L.t("Bir günün üzerine gel, o günkü kullanımı gör.")
         }
-        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "d MMMM yyyy, EEEE"
+        let f = DateFormatter(); f.locale = L.locale; f.dateFormat = "d MMMM yyyy, EEEE"
         let day = model.heat[k] ?? [:]
         let total = model.dayTotal(k)
-        if total == 0 { return "\(f.string(from: d)) · kullanım yok" }
+        if total == 0 { return L.f("%@ · kullanım yok", f.string(from: d)) }
         let parts = day.filter { model.filter == nil || $0.key == model.filter }
             .sorted { $0.value > $1.value }
             .map { "\(Provider(rawValue: $0.key)?.name ?? $0.key) \(formatTokens($0.value))" }
             .joined(separator: " · ")
-        return "\(f.string(from: d)) · \(formatTokens(total)) token · \(parts)"
+        return L.f("%@ · %@ token · %@", f.string(from: d), formatTokens(total), parts)
     }
 
     var body: some View {
@@ -437,7 +440,7 @@ struct HeatmapCard: View {
         let months: [Int: String] = {
             var m: [Int: String] = [:]
             var last = -1
-            let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "MMM"
+            let f = DateFormatter(); f.locale = L.locale; f.dateFormat = "MMM"
             for (i, col) in g.enumerated() {
                 guard let d = col.compactMap({ $0 }).first else { continue }
                 let mo = cal.component(.month, from: d)
@@ -448,14 +451,14 @@ struct HeatmapCard: View {
 
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Text("Etkinlik").font(t.font(13, .semibold))
-                Text("Son 53 hafta").font(t.font(11)).foregroundStyle(t.sub)
+                Text(L.t("Etkinlik")).font(t.font(13, .semibold))
+                Text(L.t("Son 53 hafta")).font(t.font(11)).foregroundStyle(t.sub)
                 Spacer()
                 Pill(t: t, selected: model.heatByProvider, action: { model.heatByProvider = true }) {
-                    Text("Sağlayıcıya göre renk").font(t.font(11, .medium))
+                    Text(L.t("Sağlayıcıya göre renk")).font(t.font(11, .medium))
                 }
                 Pill(t: t, selected: !model.heatByProvider, action: { model.heatByProvider = false }) {
-                    Text("Yoğunluk").font(t.font(11, .medium))
+                    Text(L.t("Yoğunluk")).font(t.font(11, .medium))
                 }
             }
 
@@ -474,7 +477,7 @@ struct HeatmapCard: View {
                     HStack(alignment: .top, spacing: 0) {
                         VStack(alignment: .leading, spacing: gap) {
                             ForEach(0..<7, id: \.self) { r in
-                                Text([0, 2, 4].contains(r) ? ["Pzt", "", "Çar", "", "Cum", "", ""][r] : "")
+                                Text([0, 2, 4].contains(r) ? L.t(["Pzt", "", "Çar", "", "Cum", "", ""][r]) : "")
                                     .font(t.font(9)).foregroundStyle(t.sub).frame(height: cell, alignment: .leading)
                             }
                         }
@@ -520,11 +523,11 @@ struct HeatmapCard: View {
                     }
                 } else {
                     HStack(spacing: 4) {
-                        Text("Az").font(t.font(10)).foregroundStyle(t.sub)
+                        Text(L.t("Az")).font(t.font(10)).foregroundStyle(t.sub)
                         ForEach(0..<5, id: \.self) { lv in
                             RoundedRectangle(cornerRadius: 2).fill(color(lv, t)).frame(width: 11, height: 11)
                         }
-                        Text("Çok").font(t.font(10)).foregroundStyle(t.sub)
+                        Text(L.t("Çok")).font(t.font(10)).foregroundStyle(t.sub)
                     }
                 }
             }

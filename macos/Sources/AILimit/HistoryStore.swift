@@ -26,6 +26,7 @@ final class HistoryStore: @unchecked Sendable {
           input INTEGER, output INTEGER, cache_write INTEGER, cache_read INTEGER,
           PRIMARY KEY(provider, key))
         """)
+        exec("ALTER TABLE events ADD COLUMN project TEXT")   // eski veritabanlarında yoksa eklenir, varsa hata verip geçer
         exec("CREATE INDEX IF NOT EXISTS idx_events_ts ON events(provider, ts)")
         exec("CREATE TABLE IF NOT EXISTS file_state(path TEXT PRIMARY KEY, offset INTEGER NOT NULL)")
         exec("CREATE TABLE IF NOT EXISTS file_total(path TEXT PRIMARY KEY, total INTEGER NOT NULL)")
@@ -82,6 +83,14 @@ final class HistoryStore: @unchecked Sendable {
     struct Event {
         var provider: String, key: String, ts: Double, model: String
         var input: Int, output: Int, cacheWrite: Int, cacheRead: Int
+        var project = ""   // yalnızca klasör adı; tam yol saklanmaz
+    }
+
+    /// Dosyaları baştan okutur ama olayları silmez: kayıtlar (provider,key) ile eşlenir, değerler en büyükle korunur.
+    /// Log dosyası silinmiş eski olaylar kalır.
+    func rescan(pathContains: String) {
+        lock.lock(); defer { lock.unlock() }
+        exec("DELETE FROM file_state WHERE path LIKE '%\(pathContains)%'")
     }
 
     /// Akış sırasında aynı mesaj birkaç kez yazılır; en büyük değerler tutulur.
@@ -91,9 +100,10 @@ final class HistoryStore: @unchecked Sendable {
         exec("BEGIN")
         var st: OpaquePointer?
         sqlite3_prepare_v2(db, """
-        INSERT INTO events(provider,key,ts,model,input,output,cache_write,cache_read)
-        VALUES(?,?,?,?,?,?,?,?)
+        INSERT INTO events(provider,key,ts,model,input,output,cache_write,cache_read,project)
+        VALUES(?,?,?,?,?,?,?,?,?)
         ON CONFLICT(provider,key) DO UPDATE SET
+          project=CASE WHEN excluded.project<>'' THEN excluded.project ELSE project END,
           input=MAX(input,excluded.input), output=MAX(output,excluded.output),
           cache_write=MAX(cache_write,excluded.cache_write),
           cache_read=MAX(cache_read,excluded.cache_read)
@@ -108,6 +118,7 @@ final class HistoryStore: @unchecked Sendable {
             sqlite3_bind_int64(st, 6, Int64(e.output))
             sqlite3_bind_int64(st, 7, Int64(e.cacheWrite))
             sqlite3_bind_int64(st, 8, Int64(e.cacheRead))
+            sqlite3_bind_text(st, 9, e.project, -1, SQLITE_TRANSIENT)
             sqlite3_step(st)
         }
         sqlite3_finalize(st)
@@ -210,6 +221,53 @@ extension HistoryStore {
             s.cacheWrite = Int(sqlite3_column_int64(st, 3))
             s.cacheRead = Int(sqlite3_column_int64(st, 4))
             out.append((sqlite3_column_text(st, 0).map { String(cString: $0) } ?? "", s))
+        }
+        return out
+    }
+}
+
+extension HistoryStore {
+    /// Proje (klasör adı) ve model başına toplamlar; adı olmayan kayıtlar atlanır.
+    func projectSums(since: Date) -> [(project: String, model: String, sums: TokenSums)] {
+        lock.lock(); defer { lock.unlock() }
+        var st: OpaquePointer?
+        defer { sqlite3_finalize(st) }
+        sqlite3_prepare_v2(db, """
+        SELECT project, model, SUM(input), SUM(output), SUM(cache_write), SUM(cache_read)
+        FROM events WHERE ts>=? AND project IS NOT NULL AND project<>'' GROUP BY project, model
+        """, -1, &st, nil)
+        sqlite3_bind_double(st, 1, since.timeIntervalSince1970)
+        var out: [(String, String, TokenSums)] = []
+        while sqlite3_step(st) == SQLITE_ROW {
+            var s = TokenSums()
+            s.input = Int(sqlite3_column_int64(st, 2))
+            s.output = Int(sqlite3_column_int64(st, 3))
+            s.cacheWrite = Int(sqlite3_column_int64(st, 4))
+            s.cacheRead = Int(sqlite3_column_int64(st, 5))
+            out.append((String(cString: sqlite3_column_text(st, 0)),
+                        sqlite3_column_text(st, 1).map { String(cString: $0) } ?? "", s))
+        }
+        return out
+    }
+
+    /// Günlük, sağlayıcı ve model başına toplamlar (CSV için). Satır: tarih,sağlayıcı,model,input,output,cache_write,cache_read.
+    func exportCSV() -> String {
+        lock.lock(); defer { lock.unlock() }
+        var st: OpaquePointer?
+        defer { sqlite3_finalize(st) }
+        sqlite3_prepare_v2(db, """
+        SELECT strftime('%Y-%m-%d', ts, 'unixepoch', 'localtime') d, provider, COALESCE(model,''),
+               SUM(input), SUM(output), SUM(cache_write), SUM(cache_read)
+        FROM events GROUP BY d, provider, model ORDER BY d, provider, model
+        """, -1, &st, nil)
+        var out = "date,provider,model,input,output,cache_write,cache_read\n"
+        while sqlite3_step(st) == SQLITE_ROW {
+            let f = (0..<3).map { i -> String in
+                let v = sqlite3_column_text(st, Int32(i)).map { String(cString: $0) } ?? ""
+                return v.contains(",") ? "\"\(v)\"" : v
+            }
+            let n = (3..<7).map { String(sqlite3_column_int64(st, Int32($0))) }
+            out += (f + n).joined(separator: ",") + "\n"
         }
         return out
     }

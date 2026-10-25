@@ -66,7 +66,7 @@ struct DashboardView: View {
                     let sel = state.dashPage == p.rawValue
                     HStack(spacing: 9) {
                         Image(systemName: p.icon).frame(width: 18).foregroundStyle(sel ? t.accent : t.sub)
-                        Text(p.title).font(t.font(13, sel ? .semibold : .regular))
+                        Text(L.t(p.title)).font(t.font(13, sel ? .semibold : .regular))
                         Spacer()
                     }
                     .padding(.horizontal, 10).padding(.vertical, 8)
@@ -83,7 +83,7 @@ struct DashboardView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text(DashPage(rawValue: state.dashPage)?.title ?? "").font(t.font(26, .bold))
+                    Text(L.t(DashPage(rawValue: state.dashPage)?.title ?? "")).font(t.font(26, .bold))
                     page
                 }
                 .padding(24)
@@ -93,6 +93,7 @@ struct DashboardView: View {
         .foregroundStyle(t.text)
         .background(t.bg)
         .themed(t)
+        .environment(\.locale, L.locale)
     }
 
     @ViewBuilder private var page: some View {
@@ -137,7 +138,8 @@ struct ProvidersPage: View {
 
     var body: some View {
         let t = state.theme
-        Text("Menü çubuğunda ve popover'da görünecek sağlayıcıları seç.").font(t.font(12)).foregroundStyle(t.sub)
+        SetupCheckCard()
+        Text(L.t("Menü çubuğunda ve popover'da görünecek sağlayıcıları seç.")).font(t.font(12)).foregroundStyle(t.sub)
         ForEach(Provider.allCases) { p in
             let u = state.usage[p] ?? .loading()
             HStack(spacing: 14) {
@@ -145,13 +147,13 @@ struct ProvidersPage: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Text(p.name).font(t.font(14, .semibold))
-                        Text("Limit").font(t.font(10)).foregroundStyle(t.sub)
+                        Text(L.t("Limit")).font(t.font(10)).foregroundStyle(t.sub)
                         ConfidenceTag(c: u.limitConfidence)
-                        Text("Token").font(t.font(10)).foregroundStyle(t.sub)
+                        Text(L.t("Token")).font(t.font(10)).foregroundStyle(t.sub)
                         ConfidenceTag(c: u.tokenConfidence)
                     }
                     ForEach(u.notes, id: \.self) { n in
-                        Text(n).font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
+                        Text(L.t(n)).font(t.font(10)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Spacer()
@@ -176,7 +178,7 @@ struct StyleChoice: View {
                 MetricGlyph(left: 0.57, style: style, tag: nil, text: .white)
             }
             .frame(height: 44)
-            Text(style.label).font(t.font(11, selected ? .semibold : .regular))
+            Text(L.t(style.label)).font(t.font(11, selected ? .semibold : .regular))
         }
         .padding(8)
         .frame(maxWidth: .infinity)
@@ -193,7 +195,7 @@ struct MenuBarPage: View {
     var body: some View {
         let t = state.theme
         VStack(alignment: .leading, spacing: 8) {
-            Text("ÖNİZLEME").font(t.font(10, .bold)).foregroundStyle(t.sub)
+            Text(L.t("ÖNİZLEME")).font(t.font(10, .bold)).foregroundStyle(t.sub)
             HStack(spacing: 14) {
                 MenuBarLabel(forceDark: true).environmentObject(state)
                     .padding(.horizontal, 12).padding(.vertical, 6)
@@ -205,11 +207,11 @@ struct MenuBarPage: View {
         }
         .card(t, padding: 14)
 
-        SettingRow(title: "Etiketleri göster", subtitle: "5 saatlik için \"5s\", haftalık için \"H\", günlük kota için \"G\". Aynı yüzdeler olsa bile hangisi olduğu anlaşılır.") {
+        SettingRow(title: L.t("Etiketleri göster"), subtitle: L.t("5 saatlik için \"5s\", haftalık için \"H\", günlük kota için \"G\". Aynı yüzdeler olsa bile hangisi olduğu anlaşılır.")) {
             Toggle("", isOn: $state.showTags).toggleStyle(.switch).labelsHidden()
         }
 
-        SettingRow(title: "5 saatlik limit", subtitle: "Menü çubuğunda göster.") {
+        SettingRow(title: L.t("5 saatlik limit"), subtitle: L.t("Menü çubuğunda göster.")) {
             Toggle("", isOn: $state.showFive).toggleStyle(.switch).labelsHidden()
         }
         if state.showFive {
@@ -220,7 +222,7 @@ struct MenuBarPage: View {
             }
         }
 
-        SettingRow(title: "Haftalık limit", subtitle: "Menü çubuğunda göster.") {
+        SettingRow(title: L.t("Haftalık limit"), subtitle: L.t("Menü çubuğunda göster.")) {
             Toggle("", isOn: $state.showWeek).toggleStyle(.switch).labelsHidden()
         }
         if state.showWeek {
@@ -230,7 +232,7 @@ struct MenuBarPage: View {
                 }
             }
         }
-        Text("Hangi sağlayıcıların görüneceğini Sağlayıcılar sayfasından seçersin.").font(t.font(11)).foregroundStyle(t.sub)
+        Text(L.t("Hangi sağlayıcıların görüneceğini Sağlayıcılar sayfasından seçersin.")).font(t.font(11)).foregroundStyle(t.sub)
     }
 }
 
@@ -258,7 +260,7 @@ struct ThemeChoice: View {
             }
             .frame(height: 74)
             .overlay(RoundedRectangle(cornerRadius: theme.radius).stroke(theme.border, lineWidth: theme.borderW))
-            Text(theme.name).font(t.font(12, selected ? .bold : .medium))
+            Text(L.t(theme.name)).font(t.font(12, selected ? .bold : .medium))
         }
         .padding(8)
         .background(t.card, in: RoundedRectangle(cornerRadius: t.radius + 2))
@@ -273,7 +275,15 @@ struct AppearancePage: View {
 
     var body: some View {
         let t = state.theme
-        Text("Tema popover'a ve bu pencereye uygulanır. Menü çubuğu her zaman sistemin açık/koyu görünümüne uyar.").font(t.font(12)).foregroundStyle(t.sub)
+        SettingRow(title: L.t("Dil"), subtitle: L.t("Arayüz dilini seç. Değişiklik hemen uygulanır.")) {
+            Picker("", selection: $state.language) {
+                Text(L.t("Sistem")).tag("system")
+                Text("Türkçe").tag("tr")
+                Text("English").tag("en")
+            }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 240)
+        }
+        Text(L.t("Tema popover'a ve bu pencereye uygulanır. Menü çubuğu her zaman sistemin açık/koyu görünümüne uyar.")).font(t.font(12)).foregroundStyle(t.sub)
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
             ForEach(Theme.all) { th in ThemeChoice(theme: th) }
         }
@@ -285,26 +295,32 @@ struct AutomationPage: View {
 
     private var starterNote: String {
         guard state.starterOn else { return "" }
-        if let at = state.starterFireAt { return " Sonraki otomatik mesaj: \(AppState.whenText(at))." }
-        return " Sıfırlanma saati bekleniyor."
+        if let at = state.starterFireAt { return L.f(" Sonraki otomatik mesaj: %@.", AppState.whenText(at)) }
+        return L.t(" Sıfırlanma saati bekleniyor.")
     }
 
     var body: some View {
         let t = state.theme
-        SettingRow(title: "Limit bildirimleri", subtitle: "Kalan %15 ve %5'in altına inince, ayrıca limit yenilenince bildirim gönderir.") {
+        SettingRow(title: L.t("Limit bildirimleri"), subtitle: L.t("Kalan %15 ve %5'in altına inince, ayrıca limit yenilenince bildirim gönderir.")) {
             Toggle("", isOn: $state.notificationsOn).toggleStyle(.switch).labelsHidden()
         }
-        SettingRow(title: "Haftalık özet", subtitle: "Pazartesi sabahı geçen haftanın toplam token'ını, en yoğun gününü ve en çok kullandığın aracı bildirir. Bildirimler kapalıysa gelmez.") {
+        SettingRow(title: L.t("Bitiş tahmini notu"), subtitle: L.t("Kartların altında \"Bu hızla biter: 5 saatlik 19:40\" satırını gösterir.")) {
+            Toggle("", isOn: $state.showForecast).toggleStyle(.switch).labelsHidden()
+        }
+        SettingRow(title: L.t("Sonraki otomatik mesaj notu"), subtitle: L.t("Claude kartında pencere başlatıcının bir sonraki mesaj saatini gösterir. Başlatıcı kapalıysa zaten görünmez.")) {
+            Toggle("", isOn: $state.showNextStart).toggleStyle(.switch).labelsHidden()
+        }
+        SettingRow(title: L.t("Haftalık özet"), subtitle: L.t("Pazartesi sabahı geçen haftanın toplam token'ını, en yoğun gününü ve en çok kullandığın aracı bildirir. Bildirimler kapalıysa gelmez.")) {
             Toggle("", isOn: $state.weeklySummaryOn).toggleStyle(.switch).labelsHidden()
         }
-        SettingRow(title: "Girişte otomatik başlat", subtitle: "Mac'e giriş yapınca uygulama kendiliğinden açılır.") {
+        SettingRow(title: L.t("Girişte otomatik başlat"), subtitle: L.t("Mac'e giriş yapınca uygulama kendiliğinden açılır.")) {
             Toggle("", isOn: Binding(get: { state.launchAtLogin }, set: { state.setLaunchAtLogin($0) }))
                 .toggleStyle(.switch).labelsHidden()
         }
-        SettingRow(title: "Claude oturumunu otomatik yenile", subtitle: "Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.") {
+        SettingRow(title: L.t("Claude oturumunu otomatik yenile"), subtitle: L.t("Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.")) {
             Toggle("", isOn: $state.refreshLogin).toggleStyle(.switch).labelsHidden()
         }
-        SettingRow(title: "Claude pencere başlatıcı", subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.\(starterNote)") {
+        SettingRow(title: L.t("Claude pencere başlatıcı"), subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.\(starterNote)") {
             Toggle("", isOn: $state.starterOn).toggleStyle(.switch).labelsHidden()
         }
     }
@@ -319,24 +335,24 @@ struct AboutPage: View {
             LogoMark(size: 72, palette: t.logo)
             VStack(alignment: .leading, spacing: 4) {
                 Text(AppInfo.name).font(t.font(22, .bold))
-                Text("Yapay zekâ araçlarının limitini ve token kullanımını menü çubuğundan takip et.")
+                Text(L.t("Yapay zekâ araçlarının limitini ve token kullanımını menü çubuğundan takip et."))
                     .font(t.font(12)).foregroundStyle(t.sub).fixedSize(horizontal: false, vertical: true)
             }
         }
         .card(t, padding: 16)
         VStack(alignment: .leading, spacing: 10) {
-            Text("Veri doğruluğu etiketleri").font(t.font(13, .semibold))
-            HStack(spacing: 8) { ConfidenceTag(c: .exact); Text("Sağlayıcının kendi verisi ya da kayıtlardan birebir.").font(t.font(12)).foregroundStyle(t.sub) }
-            HStack(spacing: 8) { ConfidenceTag(c: .estimate); Text("Tahmin ya da kayıt yapısından çözümlenmiş alanlar.").font(t.font(12)).foregroundStyle(t.sub) }
-            HStack(spacing: 8) { ConfidenceTag(c: .none); Text("Kaynak yok ya da erişilemedi; uydurma değer gösterilmez.").font(t.font(12)).foregroundStyle(t.sub) }
+            Text(L.t("Veri doğruluğu etiketleri")).font(t.font(13, .semibold))
+            HStack(spacing: 8) { ConfidenceTag(c: .exact); Text(L.t("Sağlayıcının kendi verisi ya da kayıtlardan birebir.")).font(t.font(12)).foregroundStyle(t.sub) }
+            HStack(spacing: 8) { ConfidenceTag(c: .estimate); Text(L.t("Tahmin ya da kayıt yapısından çözümlenmiş alanlar.")).font(t.font(12)).foregroundStyle(t.sub) }
+            HStack(spacing: 8) { ConfidenceTag(c: .none); Text(L.t("Kaynak yok ya da erişilemedi; uydurma değer gösterilmez.")).font(t.font(12)).foregroundStyle(t.sub) }
         }
         .card(t, padding: 16)
         VStack(alignment: .leading, spacing: 8) {
-            Text("Veri kaynakları").font(t.font(13, .semibold))
-            Text("Claude: ~/.claude kayıtları (token), Anthropic kullanım uç noktası (limit)").font(t.font(12)).foregroundStyle(t.sub)
-            Text("Codex: ~/.codex oturum kayıtları (limit ve token)").font(t.font(12)).foregroundStyle(t.sub)
-            Text("Antigravity: yerel konuşma veritabanı (token), yerel dil sunucusu (limit)").font(t.font(12)).foregroundStyle(t.sub)
-            Text("Gemini: Google Code Assist kota API'si (Gemini CLI oturumuyla)").font(t.font(12)).foregroundStyle(t.sub)
+            Text(L.t("Veri kaynakları")).font(t.font(13, .semibold))
+            Text(L.t("Claude: ~/.claude kayıtları (token), Anthropic kullanım uç noktası (limit)")).font(t.font(12)).foregroundStyle(t.sub)
+            Text(L.t("Codex: ~/.codex oturum kayıtları (limit ve token)")).font(t.font(12)).foregroundStyle(t.sub)
+            Text(L.t("Antigravity: yerel konuşma veritabanı (token), yerel dil sunucusu (limit)")).font(t.font(12)).foregroundStyle(t.sub)
+            Text(L.t("Gemini: Google Code Assist kota API'si (Gemini CLI oturumuyla)")).font(t.font(12)).foregroundStyle(t.sub)
         }
         .card(t, padding: 16)
     }
@@ -353,25 +369,25 @@ struct SyncPage: View {
 
     var body: some View {
         let t = state.theme
-        SettingRow(title: "Otomatik yenileme", subtitle: "Verilerin arka planda ne sıklıkla okunacağı. Yerel kayıtlar (token geçmişi, Codex, Antigravity) her yenilemede okunur, 15 saniye bile sorun olmaz.") {
+        SettingRow(title: L.t("Otomatik yenileme"), subtitle: L.t("Verilerin arka planda ne sıklıkla okunacağı. Yerel kayıtlar (token geçmişi, Codex, Antigravity) her yenilemede okunur, 15 saniye bile sorun olmaz.")) {
             Picker("", selection: $state.refreshInterval) {
-                ForEach(Self.options, id: \.1) { Text($0.0).tag($0.1) }
+                ForEach(Self.options, id: \.1) { Text(L.t($0.0)).tag($0.1) }
             }
             .labelsHidden().frame(width: 160)
         }
         SettingRow(
-            title: "Şimdi senkronize et",
-            subtitle: state.syncing ? "Okunuyor…" : (state.updatedAt.map { "Son senkron: \(Self.stamp($0))" } ?? "Henüz okunmadı.")
+            title: L.t("Şimdi senkronize et"),
+            subtitle: state.syncing ? L.t("Okunuyor…") : (state.updatedAt.map { L.f("Son senkron: %@", Self.stamp($0)) } ?? L.t("Henüz okunmadı."))
         ) {
-            Button("Senkronize et") { state.refresh(force: true) }
+            Button(L.t("Senkronize et")) { state.refresh(force: true) }
         }
 
         VStack(alignment: .leading, spacing: 8) {
-            Text("Kaynak başına sınırlar").font(t.font(13, .semibold))
-            Text("Claude limit yüzdesi: Anthropic'in kullanım bilgisi sınırlı olduğu için seçtiğin süre ne olursa olsun en sık 1 dakikada bir sorgulanır; hız sınırına takılırsa 5 dakika beklenir. Arada son alınan değer gösterilir, yenilenen pencereler hemen %100 olur.")
-            Text("Gemini kotası: en sık 2 dakikada bir.")
-            Text("Antigravity limiti: IDE açıksa her yenilemede yerel sunucudan okunur, kapalıysa okunamaz.")
-            Text("Codex ve token geçmişi: yerel dosyalardan, her yenilemede.")
+            Text(L.t("Kaynak başına sınırlar")).font(t.font(13, .semibold))
+            Text(L.t("Claude limit yüzdesi: Anthropic'in kullanım bilgisi sınırlı olduğu için seçtiğin süre ne olursa olsun en sık 1 dakikada bir sorgulanır; hız sınırına takılırsa 5 dakika beklenir. Arada son alınan değer gösterilir, yenilenen pencereler hemen %100 olur."))
+            Text(L.t("Gemini kotası: en sık 2 dakikada bir."))
+            Text(L.t("Antigravity limiti: IDE açıksa her yenilemede yerel sunucudan okunur, kapalıysa okunamaz."))
+            Text(L.t("Codex ve token geçmişi: yerel dosyalardan, her yenilemede."))
         }
         .font(t.font(12)).foregroundStyle(t.sub)
         .fixedSize(horizontal: false, vertical: true)

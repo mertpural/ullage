@@ -34,12 +34,12 @@ enum Notifier {
                     seen.insert(key)
                     // Daha düşük eşik geçildiyse üsttekini de işaretle ki ikinci bildirim gelmesin.
                     for (l2, _) in [(0.05, ""), (0.15, "")] where l2 >= level { seen.insert("\(base)|\(l2)") }
-                    send("\(p.name): limit azaldı", "\(row.title) için kalan \(label) altına düştü (\(Int((row.left * 100).rounded()))%).")
+                    send(L.f("%@: limit azaldı", p.name), L.f("%@ için kalan %@ altına düştü (%lld%%).", L.t(row.title), label, Int((row.left * 100).rounded())))
                     break
                 }
 
                 if let o = old[p]?.rows.first(where: { $0.title == row.title }), o.left <= 0.2, row.left >= 0.9 {
-                    send("\(p.name): limit yenilendi", "\(row.title) penceresi sıfırlandı, %\(Int((row.left * 100).rounded())) kaldı.")
+                    send(L.f("%@: limit yenilendi", p.name), L.f("%@ penceresi sıfırlandı, %%%lld kaldı.", L.t(row.title), Int((row.left * 100).rounded())))
                 }
             }
         }
@@ -68,11 +68,11 @@ enum WeeklySummary {
         guard total > 0 else { return }
         let byDay = Dictionary(grouping: pts, by: { $0.bucket }).mapValues { $0.reduce(0) { $0 + $1.tokens } }
         let byProv = Dictionary(grouping: pts, by: { $0.provider }).mapValues { $0.reduce(0) { $0 + $1.tokens } }
-        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "EEEE"
-        var text = "Geçen hafta \(formatTokens(total)) token."
-        if let d = byDay.max(by: { $0.value < $1.value }) { text += " En yoğun gün \(f.string(from: d.key)) (\(formatTokens(d.value)))."}
-        if let p = byProv.max(by: { $0.value < $1.value }).flatMap({ Provider(rawValue: $0.key) }) { text += " En çok \(p.name)." }
-        Notifier.send("Ullage haftalık özet", text)
+        let f = DateFormatter(); f.locale = L.locale; f.dateFormat = "EEEE"
+        var text = L.f("Geçen hafta %@ token.", formatTokens(total))
+        if let d = byDay.max(by: { $0.value < $1.value }) { text += L.f(" En yoğun gün %@ (%@).", f.string(from: d.key), formatTokens(d.value)) }
+        if let p = byProv.max(by: { $0.value < $1.value }).flatMap({ Provider(rawValue: $0.key) }) { text += L.f(" En çok %@.", p.name) }
+        Notifier.send(L.t("Ullage haftalık özet"), text)
     }
 }
 
@@ -109,7 +109,7 @@ enum WindowStarter {
 
     /// Haiku'ya tek satırlık istek gönderir, oturum kaydı bırakmaz. Dönen metin durum mesajıdır.
     static func ping() -> (ok: Bool, message: String) {
-        guard let cli = cliPath else { return (false, "claude komutu bulunamadı") }
+        guard let cli = cliPath else { return (false, L.t("claude komutu bulunamadı")) }
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: tryKey)
         let p = Process()
         p.executableURL = URL(fileURLWithPath: cli)
@@ -127,13 +127,13 @@ enum WindowStarter {
         DispatchQueue.global().async { p.waitUntilExit(); done.signal() }
         if done.wait(timeout: .now() + 120) == .timedOut {
             p.terminate()
-            return (false, "Zaman aşımı")
+            return (false, L.t("Zaman aşımı"))
         }
         let text = String(data: out.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         if p.terminationStatus == 0 {
             UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: lastKey)
-            return (true, "Yeni pencere başlatıldı")
+            return (true, L.t("Yeni pencere başlatıldı"))
         }
         return (false, "Hata: \(text.prefix(120))")
     }

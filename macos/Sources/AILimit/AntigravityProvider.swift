@@ -69,17 +69,17 @@ enum AntigravityProvider {
         if all.billable > 0 {
             u.todayTokens = store.sums(provider: "antigravity", since: Calendar.current.startOfDay(for: now)).billable
             u.tokenConfidence = .estimate
-            u.notes.append(note)
+            u.notes.append(L.t(note))
         } else {
-            u.notes.append("Yerel konuşma kayıtlarında token bulunamadı.")
+            u.notes.append(L.t("Yerel konuşma kayıtlarında token bulunamadı."))
         }
         switch await AntigravityQuota.fetch() {
         case .success(let rows):
             u.extra = rows
             u.limitConfidence = .exact
-            u.notes.append("Limit: Antigravity'nin yerel dil sunucusundan (IDE açıkken).")
+            u.notes.append(L.t("Limit: Antigravity'nin yerel dil sunucusundan (IDE açıkken)."))
         case .failure(let e):
-            u.notes.append("Limit alınamadı: \(e.message)")
+            u.notes.append(L.f("Limit alınamadı: %@", e.message))
         }
         return u
     }
@@ -213,7 +213,7 @@ enum AntigravityQuota {
 
     static func fetch() async -> Result<[LimitRow], LimitError> {
         let servers = findServers()
-        guard !servers.isEmpty else { return .failure(LimitError(message: "Antigravity IDE çalışmıyor; açınca okunur")) }
+        guard !servers.isEmpty else { return .failure(LimitError(message: L.t("Antigravity IDE çalışmıyor; açınca okunur"))) }
         let session = URLSession(configuration: .ephemeral, delegate: LocalTLSDelegate(), delegateQueue: nil)
         let meta = #"{"metadata":{"ideName":"antigravity","extensionName":"antigravity","locale":"en"}}"#
 
@@ -229,7 +229,7 @@ enum AntigravityQuota {
                 }
             }
         }
-        return .failure(LimitError(message: "Yerel sunucudan kota okunamadı"))
+        return .failure(LimitError(message: L.t("Yerel sunucudan kota okunamadı")))
     }
 
     private static func parseDate(_ any: Any?) -> Date? {

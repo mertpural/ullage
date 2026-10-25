@@ -67,7 +67,7 @@ enum GeminiProvider {
         return u
     }
 
-    private static func fail(_ msg: String) -> Usage { Usage(notes: ["Limit alınamadı: \(msg)"]) }
+    private static func fail(_ msg: String) -> Usage { Usage(notes: [L.f("Limit alınamadı: %@", msg)]) }
 
     private static func accessToken() async -> Result<String, LimitError> {
         if let t = cachedToken, t.expires > Date().addingTimeInterval(60) { return .success(t.value) }
@@ -82,7 +82,7 @@ enum GeminiProvider {
             return .success(tok)
         }
         guard let refresh = obj["refresh_token"] as? String else {
-            return .failure(LimitError(message: "Oturum süresi dolmuş ve yenileme anahtarı yok"))
+            return .failure(LimitError(message: L.t("Oturum süresi dolmuş ve yenileme anahtarı yok")))
         }
         var req = URLRequest(url: URL(string: "https://oauth2.googleapis.com/token")!)
         req.httpMethod = "POST"
@@ -94,11 +94,11 @@ enum GeminiProvider {
         let form = ["client_id": client.id, "client_secret": client.secret, "refresh_token": refresh, "grant_type": "refresh_token"]
         req.httpBody = form.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "")" }
             .joined(separator: "&").data(using: .utf8)
-        guard let (d, r) = try? await URLSession.shared.data(for: req) else { return .failure(LimitError(message: "Ağ hatası")) }
+        guard let (d, r) = try? await URLSession.shared.data(for: req) else { return .failure(LimitError(message: L.t("Ağ hatası"))) }
         let code = (r as? HTTPURLResponse)?.statusCode ?? 0
         guard code == 200, let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any],
               let tok = o["access_token"] as? String else {
-            return .failure(LimitError(message: "Oturum yenilenemedi (\(code)); Gemini CLI'ı bir kez çalıştırıp giriş yap"))
+            return .failure(LimitError(message: L.f("Oturum yenilenemedi (%lld); Gemini CLI'ı bir kez çalıştırıp giriş yap", code)))
         }
         let life = o["expires_in"] as? Double ?? 3000
         cachedToken = (tok, Date().addingTimeInterval(life))
@@ -138,7 +138,7 @@ enum GeminiProvider {
             if reason == "SUBSCRIPTION_REQUIRED" {
                 return fail("Bu Google hesabında Gemini Code Assist lisansı yok, Google kota bilgisini vermiyor (SUBSCRIPTION_REQUIRED)")
             }
-            return fail("Kota yanıtı \(code) döndürdü\(reason.map { " (\($0))" } ?? "")")
+            return fail(L.f("Kota yanıtı %lld döndürdü%@", code, reason.map { " (\($0))" } ?? ""))
         }
 
         // Model gruplarına göre en düşük kalan oranı al (CodexBar ile aynı gruplama).
@@ -156,8 +156,8 @@ enum GeminiProvider {
         let rows = groups.sorted { (order.firstIndex(of: $0.key) ?? 9) < (order.firstIndex(of: $1.key) ?? 9) }
             .map { LimitRow(title: "\($0.key) · günlük kota", left: max(0, min(1, $0.value.left)), reset: $0.value.reset) }
         var u = Usage(extra: rows, limitConfidence: .exact)
-        u.notes.append("Limit: Google Code Assist kota API'sinden (Gemini CLI oturumuyla). Gemini'de 5 saatlik/haftalık pencere yok, günlük kota var.")
-        u.notes.append("Token sayısı yerelde tutulmuyor.")
+        u.notes.append(L.t("Limit: Google Code Assist kota API'sinden (Gemini CLI oturumuyla). Gemini'de 5 saatlik/haftalık pencere yok, günlük kota var.")) 
+        u.notes.append(L.t("Token sayısı yerelde tutulmuyor."))
         return u
     }
 }

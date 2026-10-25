@@ -148,6 +148,20 @@ final class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(starterOn, forKey: "starterOn") }
     }
     @Published var starterStatus = ""
+    /// Kartlarda "Bu hızla biter" ve "Sonraki otomatik mesaj" notları.
+    @Published var showForecast: Bool = UserDefaults.standard.object(forKey: "showForecast") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(showForecast, forKey: "showForecast") }
+    }
+    @Published var showNextStart: Bool = UserDefaults.standard.object(forKey: "showNextStart") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(showNextStart, forKey: "showNextStart") }
+    }
+    /// "system", "tr" ya da "en"; değişince tüm görünümler yeniden çizilir.
+    @Published var language: String = UserDefaults.standard.string(forKey: "language") ?? "system" {
+        didSet {
+            UserDefaults.standard.set(language, forKey: "language")
+            applyThemeIcon()
+        }
+    }
     var starterTimer: Timer?
     @Published var starterFireAt: Date?
     @Published var weeklySummaryOn: Bool = UserDefaults.standard.object(forKey: "weeklySummaryOn") as? Bool ?? true {
@@ -207,6 +221,10 @@ final class AppState: ObservableObject {
         if notificationsOn { Notifier.requestAuthorization() }
         startRefreshing()
         DispatchQueue.main.async { self.applyThemeIcon() }
+        if !UserDefaults.standard.bool(forKey: "onboardingDone") {
+            UserDefaults.standard.set(true, forKey: "onboardingDone")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 8) { self.openDashboard("providers") }
+        }
         if let page = ProcessInfo.processInfo.environment["AILIMIT_OPEN"] {
             DispatchQueue.main.asyncAfter(deadline: .now() + 6) { self.openDashboard(page) }
         }
@@ -281,7 +299,7 @@ final class AppState: ObservableObject {
     }
 
     private static let dayTime: DateFormatter = {
-        let f = DateFormatter(); f.locale = Locale(identifier: "tr_TR"); f.dateFormat = "EEE HH:mm"; return f
+        let f = DateFormatter(); f.locale = L.locale; f.dateFormat = "EEE HH:mm"; return f
     }()
     private static let clock: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "HH:mm"; return f
@@ -295,13 +313,13 @@ final class AppState: ObservableObject {
     /// Kartın altında gösterilen kısa notlar: limitin ne zaman biteceği ve sonraki otomatik mesaj.
     func footnotes(_ p: Provider, _ u: Usage) -> [String] {
         var out: [String] = []
-        if u.staleSince == nil {
+        if showForecast, u.staleSince == nil {
             var parts: [String] = []
-            if let f = u.fiveRow, let at = Pace.exhaustion(f, window: 5 * 3600) { parts.append("5 saatlik \(Self.whenText(at))") }
-            if let w = u.weekRow, let at = Pace.exhaustion(w, window: 7 * 86400) { parts.append("haftalık \(Self.whenText(at))") }
-            if !parts.isEmpty { out.append("Bu hızla biter: " + parts.joined(separator: ", ")) }
+            if let f = u.fiveRow, let at = Pace.exhaustion(f, window: 5 * 3600) { parts.append(L.f("5 saatlik %@", Self.whenText(at))) }
+            if let w = u.weekRow, let at = Pace.exhaustion(w, window: 7 * 86400) { parts.append(L.f("haftalık %@", Self.whenText(at))) }
+            if !parts.isEmpty { out.append(L.t("Bu hızla biter: ") + parts.joined(separator: ", ")) }
         }
-        if p == .claude, starterOn, let at = starterFireAt { out.append("Sonraki otomatik mesaj: \(Self.whenText(at))") }
+        if showNextStart, p == .claude, starterOn, let at = starterFireAt { out.append(L.f("Sonraki otomatik mesaj: %@", Self.whenText(at))) }
         return out
     }
 
@@ -329,7 +347,7 @@ final class AppState: ObservableObject {
 
     /// Claude'un yeni 5 saatlik penceresini hemen başlatır.
     func startWindow() {
-        starterStatus = "Başlatılıyor…"
+        starterStatus = L.t("Başlatılıyor…")
         Task.detached {
             let r = WindowStarter.ping()
             await MainActor.run {
@@ -367,9 +385,10 @@ func statusColor(_ left: Double) -> Color {
 
 func formatRemaining(_ date: Date, now: Date = Date()) -> String {
     let s = Int(date.timeIntervalSince(now))
-    if s <= 0 { return "şimdi" }
+    if s <= 0 { return L.t("şimdi") }
     let d = s / 86400, h = (s % 86400) / 3600, m = (s % 3600) / 60
-    if d > 0 { return "\(d)g \(h)s" }
-    if h > 0 { return "\(h)s \(m)dk" }
-    return "\(m)dk"
+    let u = L.en ? ("d", "h", "m") : ("g", "s", "dk")
+    if d > 0 { return "\(d)\(u.0) \(h)\(u.1)" }
+    if h > 0 { return "\(h)\(u.1) \(m)\(u.2)" }
+    return "\(m)\(u.2)"
 }

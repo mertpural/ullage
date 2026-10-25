@@ -107,6 +107,9 @@ struct AILimitApp: App {
                     save(PopoverView().environmentObject(st), "popover_\(p.rawValue).png")
                 }
                 save(MenuBarLabel(forceDark: true).environmentObject(st).padding(8), "menubar.png")
+                save(ShareCard(data: ShareData.load(), theme: st.theme), "share_card.png")
+                save(SetupCheckCard().environmentObject(st).frame(width: 700).padding(16), "setup_check.png")
+                save(HistoryPage().environmentObject(st).frame(width: 720).padding(24), "history_page.png")
                 for pg in ["history", "menubar", "appearance"] {
                     st.dashPage = pg
                     save(DashboardView().environmentObject(st).frame(width: 980, height: 760), "dash_\(pg).png")

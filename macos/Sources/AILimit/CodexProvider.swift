@@ -46,7 +46,7 @@ enum CodexProvider {
         ingest()
         let files = sessionFiles().sorted { $0.mod > $1.mod }
         if zstdPath == nil && files.contains(where: { $0.url.pathExtension == "zst" }) {
-            return Usage(notes: ["Codex kayıtları sıkıştırılmış (.zst). Okumak için zstd gerekli: brew install zstd"])
+            return Usage(notes: [L.t("Codex kayıtları sıkıştırılmış (.zst). Okumak için zstd gerekli: brew install zstd")])
         }
         // En yeni dosyadan başlayıp ilk limit kaydında dur: daha eski dosyalar daha eski değer taşır.
         var latest: (primary: Window?, secondary: Window?, stamp: Date)?
@@ -55,7 +55,7 @@ enum CodexProvider {
             latest = r
             break
         }
-        guard let r = latest else { return Usage(notes: ["Codex kayıtlarında limit bilgisi bulunamadı."]) }
+        guard let r = latest else { return Usage(notes: [L.t("Codex kayıtlarında limit bilgisi bulunamadı.")]) }
 
         var u = Usage(
             fiveHourLeft: left(r.primary, now: now),
@@ -68,12 +68,12 @@ enum CodexProvider {
         )
         let fmt = DateFormatter()
         fmt.dateStyle = .medium; fmt.timeStyle = .short
-        u.notes.append("Limit ve token: Codex oturum kayıtlarından (son kayıt \(fmt.string(from: r.stamp))).")
+        u.notes.append(L.f("Limit ve token: Codex oturum kayıtlarından (son kayıt %@).", fmt.string(from: r.stamp)))
         if let p = r.primary, p.resets <= now.timeIntervalSince1970 {
-            u.notes.append("Son kayıttan beri 5 saatlik pencere sıfırlandı; yeni kullanım olmadığı için %100 gösteriliyor.")
+            u.notes.append(L.t("Son kayıttan beri 5 saatlik pencere sıfırlandı; yeni kullanım olmadığı için %100 gösteriliyor."))
         }
         if let w = r.secondary, w.resets <= now.timeIntervalSince1970 {
-            u.notes.append("Haftalık pencere sıfırlandı; yeni kullanım olmadığı için %100 gösteriliyor.")
+            u.notes.append(L.t("Haftalık pencere sıfırlandı; yeni kullanım olmadığı için %100 gösteriliyor."))
         }
         return u
     }

@@ -138,13 +138,13 @@ struct ProviderStrip: View {
             let five = usage?.fiveRow, week = usage?.weekRow
             if five == nil && week == nil {
                 let other = usage?.otherRows.map(\.left).min()
-                MetricGlyph(left: other, style: state.styleFive, tag: other == nil ? nil : (tags ? "G" : nil), text: text, estimate: est, tagColor: tagColor)
+                MetricGlyph(left: other, style: state.styleFive, tag: other == nil ? nil : (tags ? (L.en ? "D" : "G") : nil), text: text, estimate: est, tagColor: tagColor)
             } else {
                 if state.showFive {
-                    MetricGlyph(left: five?.left, style: state.styleFive, tag: tags ? "5s" : nil, text: text, estimate: est, tagColor: tagColor)
+                    MetricGlyph(left: five?.left, style: state.styleFive, tag: tags ? (L.en ? "5h" : "5s") : nil, text: text, estimate: est, tagColor: tagColor)
                 }
                 if state.showWeek {
-                    MetricGlyph(left: week?.left, style: state.styleWeek, tag: tags ? "H" : nil, text: text, estimate: est, tagColor: tagColor)
+                    MetricGlyph(left: week?.left, style: state.styleWeek, tag: tags ? (L.en ? "W" : "H") : nil, text: text, estimate: est, tagColor: tagColor)
                 }
             }
         }
@@ -163,6 +163,7 @@ struct Pill<Content: View>: View {
         // Button, onTapGesture yerine: menü çubuğu penceresinde dokunuşların kaçmasını önler.
         Button(action: action) {
             content
+                .lineLimit(1).fixedSize()
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(selected ? t.accent.opacity(0.30) : t.card, in: RoundedRectangle(cornerRadius: t.pillRadius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: t.pillRadius, style: .continuous).stroke(selected ? t.accent : Color.clear, lineWidth: selected ? 1.5 : 0))
@@ -188,7 +189,7 @@ struct PopoverView: View {
                 Text(AppInfo.name).font(t.font(15, .bold))
                 Spacer()
                 if let u = state.updatedAt {
-                    Text("Güncellendi \(Self.time.string(from: u))").font(t.font(10)).foregroundStyle(t.sub)
+                    Text(L.f("Güncellendi %@", Self.time.string(from: u))).font(t.font(10)).foregroundStyle(t.sub)
                 }
             }
             TabBar()
@@ -202,8 +203,8 @@ struct PopoverView: View {
                 .frame(height: min(contentHeight, 460))
             }
             HStack(spacing: 8) {
-                Pill(t: t, action: { state.openDashboard("history") }) { Label("Kullanım", systemImage: "chart.bar.fill").font(t.font(11, .medium)) }
-                Pill(t: t, action: { state.openDashboard("providers") }) { Label("Ayarlar", systemImage: "gearshape.fill").font(t.font(11, .medium)) }
+                Pill(t: t, action: { state.openDashboard("history") }) { Label(L.t("Kullanım"), systemImage: "chart.bar.fill").font(t.font(11, .medium)) }
+                Pill(t: t, action: { state.openDashboard("providers") }) { Label(L.t("Ayarlar"), systemImage: "gearshape.fill").font(t.font(11, .medium)) }
                 Spacer()
                 Pill(t: t, action: { state.refresh(force: true) }) { Image(systemName: "arrow.clockwise").font(t.font(11, .medium)) }
                 Pill(t: t, action: { NSApplication.shared.terminate(nil) }) { Image(systemName: "power").font(t.font(11, .medium)) }
@@ -246,7 +247,7 @@ struct PopoverView: View {
     @ViewBuilder private func content(_ t: Theme) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             if visible.isEmpty {
-                Text("Hiçbir sağlayıcı seçili değil. Ayarlardan aç.").font(t.font(12)).foregroundStyle(t.sub)
+                Text(L.t("Hiçbir sağlayıcı seçili değil. Ayarlardan aç.")).font(t.font(12)).foregroundStyle(t.sub)
             } else if state.selectedTab == "all" || Provider(rawValue: state.selectedTab).map({ !state.enabled.contains($0) }) ?? true {
                 ForEach(visible) { p in OverviewCard(provider: p, usage: state.usage[p] ?? .loading()) }
             } else if let p = Provider(rawValue: state.selectedTab) {
@@ -265,7 +266,7 @@ struct TabBar: View {
         let t = state.theme
         HStack(spacing: 6) {
             Pill(t: t, selected: state.selectedTab == "all", action: { state.selectedTab = "all" }) {
-                Text("Tümü").font(t.font(12, .semibold))
+                Text(L.t("Tümü")).font(t.font(12, .semibold))
             }
             ForEach(Provider.allCases.filter { state.enabled.contains($0) }) { p in
                 Pill(t: t, selected: state.selectedTab == p.rawValue, action: { state.selectedTab = p.rawValue }) {
@@ -281,7 +282,7 @@ struct ConfidenceTag: View {
     let c: Confidence
 
     var body: some View {
-        Text(c.label)
+        Text(L.t(c.label))
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(c.color)
             .padding(.horizontal, 6).padding(.vertical, 1)
@@ -360,7 +361,7 @@ struct PaceBar: View {
 
 func resetText(_ r: Date?) -> String {
     guard let r else { return "" }
-    return r > Date() ? "Sıfırlanma \(formatRemaining(r))" : "Pencere sıfırlandı"
+    return r > Date() ? L.f("Sıfırlanma %@", formatRemaining(r)) : L.t("Pencere sıfırlandı")
 }
 
 // MARK: Tümü sayfası
@@ -378,24 +379,24 @@ struct OverviewCard: View {
                 Text(provider.name).font(t.font(14, .semibold))
                 Spacer()
                 if let tk = usage.todayTokens {
-                    Text("Bugün \(formatTokens(tk))")
+                    Text(L.f("Bugün %@", formatTokens(tk)))
                         .font(t.font(11)).foregroundStyle(t.sub)
                 }
             }
             if usage.fiveRow != nil || usage.weekRow != nil {
                 HStack(alignment: .top, spacing: 14) {
-                    if let f = usage.fiveRow { OverviewMetric(title: "5 SAATLİK", row: f, window: 5 * 3600) }
-                    if let w = usage.weekRow { OverviewMetric(title: "HAFTALIK", row: w, window: 7 * 86400) }
+                    if let f = usage.fiveRow { OverviewMetric(title: L.t("5 SAATLİK"), row: f, window: 5 * 3600) }
+                    if let w = usage.weekRow { OverviewMetric(title: L.t("HAFTALIK"), row: w, window: 7 * 86400) }
                 }
             }
             ForEach(usage.otherRows) { r in
-                OverviewMetric(title: r.title.replacingOccurrences(of: " · günlük kota", with: "").uppercased(), row: r, window: 86400)
+                OverviewMetric(title: L.t(r.title.replacingOccurrences(of: " · günlük kota", with: "")).uppercased(), row: r, window: 86400)
             }
             if usage.rows.isEmpty {
-                Text("Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.").font(t.font(10)).foregroundStyle(t.sub)
+                Text(L.t("Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.")).font(t.font(10)).foregroundStyle(t.sub)
             }
             if let st = usage.staleSince {
-                Text("Eski değer: \(PopoverView.time.string(from: st)) (güncellenemedi)").font(t.font(10)).foregroundStyle(.orange)
+                Text(L.f("Eski değer: %@ (güncellenemedi)", PopoverView.time.string(from: st))).font(t.font(10)).foregroundStyle(.orange)
             }
             FootnoteLines(provider: provider, usage: usage)
         }
@@ -457,18 +458,18 @@ struct MetricCard: View {
                 Image(systemName: icon).font(.system(size: 10)).foregroundStyle(t.sub)
                 Text(title).font(t.font(9, .bold)).foregroundStyle(t.sub)
                 Spacer()
-                Chip(text: status.0, color: status.1)
+                Chip(text: L.t(status.0), color: status.1)
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text("\(Int((row.left * 100).rounded()))%").font(t.font(30, .bold).monospacedDigit())
-                Text("kaldı").font(t.font(11)).foregroundStyle(t.sub)
+                Text(L.t("kaldı")).font(t.font(11)).foregroundStyle(t.sub)
             }
             PaceBar(left: row.left, expected: pace?.expectedLeft, track: t.sub.opacity(0.25))
             HStack {
                 Text(row.reset.map { $0 > Date() ? formatRemaining($0) : "sıfırlandı" } ?? "")
                     .font(t.font(10, .medium)).foregroundStyle(t.sub)
                 Spacer()
-                if let p = pace { Chip(text: p.label, color: p.color) }
+                if let p = pace { Chip(text: L.t(p.label), color: p.color) }
             }
         }
         .card(t)
@@ -511,7 +512,7 @@ struct ProviderDetail: View {
             }
 
             if let st = usage.staleSince {
-                Text("Eski değer: \(PopoverView.time.string(from: st)) (güncellenemedi)").font(t.font(10)).foregroundStyle(.orange)
+                Text(L.f("Eski değer: %@ (güncellenemedi)", PopoverView.time.string(from: st))).font(t.font(10)).foregroundStyle(.orange)
             }
             if usage.rows.isEmpty {
                 Text(usage.notes.first ?? "Veri alınamadı.")
@@ -521,8 +522,8 @@ struct ProviderDetail: View {
             }
             if usage.fiveRow != nil || usage.weekRow != nil {
                 HStack(alignment: .top, spacing: 10) {
-                    if let f = usage.fiveRow { MetricCard(title: "5 SAATLİK", icon: "bolt.fill", row: f, window: 5 * 3600) }
-                    if let w = usage.weekRow { MetricCard(title: "HAFTALIK", icon: "calendar", row: w, window: 7 * 86400) }
+                    if let f = usage.fiveRow { MetricCard(title: L.t("5 SAATLİK"), icon: "bolt.fill", row: f, window: 5 * 3600) }
+                    if let w = usage.weekRow { MetricCard(title: L.t("HAFTALIK"), icon: "calendar", row: w, window: 7 * 86400) }
                 }
             }
 
@@ -541,14 +542,14 @@ struct ProviderDetail: View {
             if let tk = usage.todayTokens {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("TOKEN").font(t.font(9, .bold)).foregroundStyle(t.sub)
+                        Text(L.t("TOKEN")).font(t.font(9, .bold)).foregroundStyle(t.sub)
                         Spacer()
-                        Text("Son 7 gün").font(t.font(10)).foregroundStyle(t.sub)
+                        Text(L.t("Son 7 gün")).font(t.font(10)).foregroundStyle(t.sub)
                     }
                     HStack(alignment: .bottom, spacing: 14) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(formatTokens(tk)).font(t.font(24, .bold).monospacedDigit())
-                            Text("bugün").font(t.font(10)).foregroundStyle(t.sub)
+                            Text(L.t("bugün")).font(t.font(10)).foregroundStyle(t.sub)
                         }
                         DayBars(values: state.daily[provider] ?? [], color: provider.brandColor, track: t.sub)
                     }
@@ -571,11 +572,11 @@ struct LimitBar: View {
         let t = state.theme
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
-                Text(title).lineLimit(1)
+                Text(L.t(title)).lineLimit(1)
                 Spacer(minLength: 4)
                 Text("\(estimate ? "~" : "")\(Int((left * 100).rounded()))%").monospacedDigit().foregroundStyle(t.text)
                 if let r = reset {
-                    Text(r > Date() ? "· \(formatRemaining(r))" : "· sıfırlandı").lineLimit(1).fixedSize()
+                    Text(r > Date() ? "· \(formatRemaining(r))" : L.t("· sıfırlandı")).lineLimit(1).fixedSize()
                 }
             }
             .font(t.font(11)).foregroundStyle(t.sub)

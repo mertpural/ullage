@@ -9,7 +9,7 @@ enum ClaudeProvider {
         let store = HistoryStore.shared
         let today = store.sums(provider: "claude", since: Calendar.current.startOfDay(for: now)).billable
         var u = Usage(todayTokens: today, tokenConfidence: .exact)
-        u.notes.append("Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç.")
+        u.notes.append(L.t("Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç."))
 
         switch await ClaudeLimitAPI.fetch() {
         case .success(let r):
@@ -21,15 +21,15 @@ enum ClaudeProvider {
             let age = Date().timeIntervalSince(r.fetchedAt)
             if age < 600 {
                 u.limitConfidence = .exact
-                u.notes.append("Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla).")
+                u.notes.append(L.t("Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla)."))
             } else {
                 let f = DateFormatter(); f.timeStyle = .short; f.dateStyle = age > 86400 ? .short : .none
                 u.limitConfidence = .estimate
                 u.staleSince = r.fetchedAt
-                u.notes.append("Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor (\(f.string(from: r.fetchedAt))); güncel olmayabilir.")
+                u.notes.append(L.f("Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor (%@); güncel olmayabilir.", f.string(from: r.fetchedAt)))
             }
         case .failure(let err):
-            u.notes.append("Limit yüzdesi alınamadı: \(err.message)")
+            u.notes.append(L.f("Limit yüzdesi alınamadı: %@", err.message))
         }
         return u
     }
@@ -41,6 +41,11 @@ enum ClaudeProvider {
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         let marker = Data("\"usage\"".utf8)
+        // Proje adı sonradan eklendi: eski kayıtlara işlemek için dosyalar bir kez baştan okunur.
+        if !UserDefaults.standard.bool(forKey: "projectBackfill1") {
+            store.rescan(pathContains: "/.claude/projects/")
+            UserDefaults.standard.set(true, forKey: "projectBackfill1")
+        }
 
         for case let url as URL in en where url.pathExtension == "jsonl" {
             let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
@@ -71,7 +76,8 @@ enum ClaudeProvider {
                     input: usage["input_tokens"] as? Int ?? 0,
                     output: usage["output_tokens"] as? Int ?? 0,
                     cacheWrite: usage["cache_creation_input_tokens"] as? Int ?? 0,
-                    cacheRead: usage["cache_read_input_tokens"] as? Int ?? 0
+                    cacheRead: usage["cache_read_input_tokens"] as? Int ?? 0,
+                    project: (obj["cwd"] as? String).map { URL(fileURLWithPath: $0).lastPathComponent } ?? ""
                 ))
             }
             store.upsert(events)
@@ -147,7 +153,7 @@ enum ClaudeLimitAPI {
 
         if waiting {
             if let old = stored() { return .success(old) }
-            return .failure(LimitError(message: "Anthropic hız sınırı uyguladı; biraz sonra yeniden denenecek"))
+            return .failure(LimitError(message: L.t("Anthropic hız sınırı uyguladı; biraz sonra yeniden denenecek")))
         }
 
         let sinceLast = Date().timeIntervalSince1970 - UserDefaults.standard.double(forKey: lastAttemptKey)
@@ -182,14 +188,14 @@ enum ClaudeLimitAPI {
         let out = Pipe()
         p.standardOutput = out
         p.standardError = Pipe()
-        do { try p.run() } catch { return .failure(LimitError(message: "Keychain okunamadı")) }
+        do { try p.run() } catch { return .failure(LimitError(message: L.t("Keychain okunamadı"))) }
         let data = out.fileHandleForReading.readDataToEndOfFile()
         p.waitUntilExit()
         guard p.terminationStatus == 0,
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let oauth = obj["claudeAiOauth"] as? [String: Any],
               let access = oauth["accessToken"] as? String
-        else { return .failure(LimitError(message: "Claude Code oturumu Keychain'de bulunamadı ya da erişim reddedildi")) }
+        else { return .failure(LimitError(message: L.t("Claude Code oturumu Keychain'de bulunamadı ya da erişim reddedildi"))) }
 
         let expires = (oauth["expiresAt"] as? Double).map { Date(timeIntervalSince1970: $0 / 1000) }
         lock.lock(); token = (access, expires); lock.unlock()
@@ -248,14 +254,14 @@ enum ClaudeLimitAPI {
                     _ = await refreshLoginViaCLI()
                     return await request(retryWithFreshToken: false)
                 }
-                return .failure(LimitError(message: "Oturum süresi dolmuş; Claude Code'u açınca yenilenir"))
+                return .failure(LimitError(message: L.t("Oturum süresi dolmuş; Claude Code'u açınca yenilenir")))
             }
             if code == 429 {
                 let ra = ((resp as? HTTPURLResponse)?.value(forHTTPHeaderField: "retry-after")).flatMap(Double.init) ?? 300
-                return .failure(LimitError(message: "Anthropic hız sınırı uyguladı (429)", retryAfter: ra))
+                return .failure(LimitError(message: L.t("Anthropic hız sınırı uyguladı (429)"), retryAfter: ra))
             }
             guard code == 200, let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return .failure(LimitError(message: "Uç nokta \(code) döndürdü"))
+                return .failure(LimitError(message: L.f("Uç nokta %lld döndürdü", code)))
             }
             let iso = ISO8601DateFormatter()
             iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -266,13 +272,13 @@ enum ClaudeLimitAPI {
                 return (max(0, min(1, 1 - u / 100)), reset)
             }
             let five = window("five_hour"), week = window("seven_day")
-            if five == nil && week == nil { return .failure(LimitError(message: "Yanıtta limit alanı yok")) }
+            if five == nil && week == nil { return .failure(LimitError(message: L.t("Yanıtta limit alanı yok"))) }
             return .success(ClaudeLimits(
                 fiveHourLeft: five?.0, weeklyLeft: week?.0,
                 fiveHourReset: five?.1, weeklyReset: week?.1
             ))
         } catch {
-            return .failure(LimitError(message: "Ağ hatası"))
+            return .failure(LimitError(message: L.t("Ağ hatası")))
         }
     }
 }
