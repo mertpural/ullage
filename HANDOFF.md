@@ -38,4 +38,5 @@ Limit görünmesi için Claude Code ve Codex'e bu PC'de giriş yapılmış olmal
 - **Doğruluk:** Emin olunmayan veri "Tahmini" ya da "Veri yok" diye etiketlenir, uydurma değer gösterilmez.
 - **Anthropic kullanım uç noktası** (`/api/oauth/usage`) hız sınırlı: en sık 1 dakikada bir sorgula, 429'da en az 5 dakika bekle, son iyi değeri sakla, süresi geçmiş pencere %100 sayılır. Süresi biten Claude Code oturumu `claude -p --model haiku ...` ile yenilettirilir.
 - **Gizlilik:** Anahtar/token yazdırma, kaydetme, dışarı gönderme. Proje yolu yerine yalnızca klasör adı.
+- Mac uygulaması /Applications/Ullage.app içinde durur (Belgeler korumalı klasör, izin sorar); build_app.sh yeni sürümü onun üzerine yazar.
 - Mac tarafı yardımcı betikler: `macos/scripts/build_app.sh`, `package.sh`. Görsel kontrol ortam değişkenleri: `AILIMIT_SNAPSHOT`, `AILIMIT_THEMES`, `AILIMIT_LANG`. Windows'ta karşılığı `--shots=DIR`.

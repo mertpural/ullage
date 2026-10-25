@@ -40,12 +40,12 @@ EOF
 codesign --force --sign - "$APP" >/dev/null 2>&1 || true
 echo "Hazır: $APP"
 
-# Eskiden derlemeler kökteki build/ klasörüne yazılıyordu. Orada kalan eski kopya açılmaya devam etmesin diye,
-# o klasör varsa yeni sürüm aynı yere de (üzerine yazarak) kopyalanır.
-LEGACY="../build/$APP_NAME.app"
-if [ -d "$LEGACY" ]; then
-  ditto "$APP" "$LEGACY"
-  echo "Eski konum da güncellendi: $LEGACY"
+# Kullanıcının açtığı uygulama /Applications içindedir (Belgeler gibi korumalı klasörlerde izin sorulur).
+# Orada varsa yeni sürüm onun üzerine yazılır; böylece tek kopya kalır.
+INSTALLED="/Applications/$APP_NAME.app"
+if [ -d "$INSTALLED" ]; then
+  ditto "$APP" "$INSTALLED"
+  echo "Kurulu uygulama güncellendi: $INSTALLED"
   # Derleme çıktısı ikinci bir "Ullage.app" olarak kalmasın (Spotlight'ta çift görünür). Paketleme zip için ona ihtiyaç duyar.
   if [ -z "${ULLAGE_PACKAGING:-}" ]; then
     rm -rf build/stage

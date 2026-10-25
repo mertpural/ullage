@@ -5,6 +5,8 @@ struct AILimitApp: App {
     @StateObject private var state = AppState()
 
     init() {
+        // Uygulama yeni bir konuma taşınınca "girişte başlat" kaydını yeniden yapar.
+        if ProcessInfo.processInfo.environment["AILIMIT_LOGIN_ON"] != nil { _ = LoginItem.set(true) }
         if ProcessInfo.processInfo.environment["AILIMIT_DUMP"] != nil {
             let st = AppState()
             DispatchQueue.main.asyncAfter(deadline: .now() + 25) {
