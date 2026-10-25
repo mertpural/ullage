@@ -13,10 +13,11 @@ Mac sürümüyle aynı: aynı veri, aynı temalar, aynı Kullanım sayfası.
 
 ## Ne yapıyor?
 
-- Tepsideki simgede en düşük kalan hakkın yüzdesi görünür. Rengi durumu gösterir (yeşil, turuncu, kırmızı).
-- Simgeye tıklayınca popover açılır: Claude, Codex, Antigravity için 5 saatlik ve haftalık hak, sıfırlanma süresi, tempo göstergesi, son 7 günün token grafiği.
-- Simgeye sağ tık → **Kullanım**: GitHub tarzı etkinlik tablosu, seri sayacı, gün/hafta/ay grafikleri.
+- Tepsideki simge varsayılan olarak Ullage logosu. Simgeye basınca **Kullanım** penceresi açılır; hızlı görünüm sağ tık menüsünde. Limitleri her zaman görmek için Ayarlar > Görünüm'den **yüzen widget**'ı aç (küçük, şeffaf, her zaman üstte, sürüklenebilir, boyutu ayarlanır). Tepsiye `5s ve haftalık çubuklar` ya da `tek sayı` da koyabilirsin.
+- Popover: Claude, Codex, Antigravity için 5 saatlik ve haftalık hak, sıfırlanma süresi, tempo göstergesi, son 7 günün token grafiği.
+- Kullanım sayfası: GitHub tarzı etkinlik tablosu, seri sayacı, gün/hafta/ay grafikleri, "Cache dahil" seçimi (kalıcı).
 - 9 tema, hakkın azalınca bildirim, ayarlanabilir yenileme süresi (15 saniyeden 15 dakikaya).
+- Claude limiti için Claude Code komutu ya da (isteğe bağlı) Claude Code'un durum satırı kullanılır; terminal gerekmez.
 - Hiçbir veri bir yere gönderilmez; her şey kendi bilgisayarında, kendi hesabınla okunur.
 
 ## Bilgileri nereden alıyor?
@@ -31,8 +32,9 @@ Gemini Windows sürümünde henüz yok.
 
 ## Durum
 
-Windows sürümünün ilk hali. Veri okuma mantığı macOS sürümüyle aynı sonuçları veriyor (birebir karşılaştırıldı),
-ama Windows'ta henüz gerçek bir bilgisayarda denenmedi. Bir sorun görürsen [issue](https://github.com/mertpural/ullage/issues) aç.
+Bir Windows 11 bilgisayarında denendi (kurulum, tepsi, widget, limit ölçümü). Yine de farklı ekran ölçeklemeleri (%125, %150), açık renkli görev çubuğu ve tam ekran oyunlarda widget davranışı henüz denenmedi. Bir sorun görürsen [issue](https://github.com/mertpural/ullage/issues) aç.
+
+**Limit görünmüyorsa:** terminalde `claude` yazıp `/login` ile giriş yap; Claude Desktop kullanıyorsan onda giriş yapılı olması yeter.
 
 ## Kendin derle
 

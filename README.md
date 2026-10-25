@@ -1,36 +1,43 @@
 # Ullage
 
-Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan (Windows'ta sistem tepsisinden) gösteren küçük bir uygulama.
+Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan (Windows'ta sistem tepsisinden ve küçük bir yüzen pencereden) gösteren küçük bir uygulama.
 5 saatlik ve haftalık limitini, harcadığın token'ı ve geçmiş kullanımını tek yerden görürsün.
 
 ## ⬇️ İndir
 
-- **macOS:** [Ullage.zip](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip)
-- **Windows:** [Ullage-Setup.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe)
+| | Dosya |
+|---|---|
+| **macOS** (Apple Silicon ve Intel) | [Ullage.zip](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip) |
+| **Windows** (kurulum) | [Ullage-Setup.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe) |
+| **Windows** (kurulum istemez) | [Ullage-Portable.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe) |
 
-**Mac:** zip'i aç, `Ullage.app`'i Uygulamalar klasörüne at, bitti.
-**Windows:** `Ullage-Setup.exe`'ye çift tıkla, kurulur.
-
-> İlk açılışta Mac "tanınmayan geliştirici" diyebilir. Uygulamaya **sağ tıkla → Aç → Aç** de, bir kere yeterli.
+Uygulama imzasız olduğu için ilk açılışta bir uyarı çıkar, bir kere onaylaman yeter (aşağıda).
 
 ## Ne yapıyor?
 
 - Menü çubuğunda `5s 77%  H 48%` gibi görünür: 5 saatlik ve haftalık kalan hakkın ayrı ayrı. Gösterimi (yüzde, çubuk, halka, pil...) sen seçersin.
-- Tıklayınca hakkın ne zaman yenileneceğini ve şu tempoyla gidersen yetip yetmeyeceğini gösterir.
-- Kullanım sayfasında GitHub'daki katkı tablosuna benzer bir etkinlik tablosu, seri sayacı ve günlük/haftalık/aylık token grafikleri var.
-- 9 farklı tema, bildirimler (hakkın azalınca haber verir) ve ayarlanabilir yenileme süresi.
+- Tıklayınca hakkın ne zaman yenileneceğini ve şu tempoyla gidersen yetip yetmeyeceğini gösterir ("Bu hızla biter: 19:40").
+- **Kullanım** sayfası: GitHub'daki katkı tablosuna benzer etkinlik tablosu, seri sayacı, günlük/haftalık/aylık token grafikleri, en çok kullandığın projeler, API fiyatıyla tahmini maliyet.
+- "Cache dahil" seçimi: açarsan her yerdeki toplamlar cache okumalarını da sayar.
+- CSV olarak dışa aktarma ve paylaşabileceğin haftalık özet kartı (resim).
+- 9 tema, hakkın azalınca bildirim, Pazartesi sabahı haftalık özet, Türkçe ve İngilizce arayüz.
 - Hiçbir veri bir yere gönderilmez. Her şey kendi bilgisayarında, kendi hesabınla okunur.
 
-Desteklenenler: **Claude, Codex, Antigravity** (Gemini de hesabında Code Assist lisansı varsa).
+Desteklenenler: **Claude, Codex, Antigravity** (Gemini de hesabında Code Assist lisansı varsa, şimdilik yalnızca Mac'te).
 
 ## Kurulum
 
-Gereksinim: macOS 14 veya üstü (Apple Silicon ve Intel ikisi de olur).
+### Mac (macOS 14 veya üstü)
 
-### Yol 1: Zip ile (en kolayı)
-Yukarıdaki indir bağlantısına tıkla, zip'i aç, `Ullage.app`'i Uygulamalar'a taşı.
+1. Zip'i aç, `Ullage.app`'i **Uygulamalar** klasörüne sürükle.
+2. Uygulamaya **sağ tıkla → Aç → Aç** de (imzasız olduğu için ilk seferde gerekir).
+3. İlk açılışta macOS birkaç izin sorar. Hepsine "İzin Ver" de:
+   - **Bildirimler** (hakkın azalınca haber vermesi için).
+   - **Anahtar zinciri** (Claude Code girişini okumak için). Çıkarsa "Her Zaman İzin Ver".
+   - **Belgeler klasörü** (Claude komutu çalışırken sorabilir).
+4. Uygulama açılışta Sağlayıcılar sayfasındaki **Kurulum kontrolü**nü gösterir; neyin eksik olduğunu orada görürsün.
 
-### Yol 2: Terminalden tek satır
+Terminalden tek satır:
 
 ```bash
 curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip -o /tmp/Ullage.zip \
@@ -39,67 +46,50 @@ curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip 
   && open /Applications/Ullage.app
 ```
 
-Güncellemek için aynı komutu tekrar çalıştır. Silmek için `/Applications/Ullage.app`'i çöpe at.
-
-### Yol 3: Kendin derle
+Kendin derlemek istersen (Xcode'un tamamı gerekmez, `xcode-select --install` yeter):
 
 ```bash
 git clone https://github.com/mertpural/ullage.git
 cd ullage/macos
 ./scripts/build_app.sh
-open build/Ullage.app
 ```
 
-Xcode'un tamamı gerekmez, `xcode-select --install` ile gelen komut satırı araçları yeter.
+### Windows
 
-## Bilgileri nereden alıyor?
+1. `Ullage-Setup.exe`'ye çift tıkla (ya da `Ullage-Portable.exe`'yi çalıştır).
+2. Windows "Bilgisayarınızı korudu" (SmartScreen) derse **Ek bilgi → Yine de çalıştır** de.
+3. Saatin yanındaki tepsi simgesine bak; gizliyse oku genişlet. Simgeye basınca Kullanım penceresi açılır, limitler yüzen widget'ta ve sağ tık menüsünde.
+
+Ayrıntılar ve kendin derlemek için: [`windows/`](windows).
+
+## Limitler nereden geliyor?
 
 | Araç | Limit | Token |
 |---|---|---|
-| Claude | Anthropic'in kullanım bilgisi (Claude Code girişinle) | `~/.claude` klasörü |
+| Claude | Claude Code komutu ve Anthropic'in kullanım bilgisi (Claude Code ya da Claude uygulaması girişinle) | `~/.claude` klasörü |
 | Codex | `~/.codex` klasörü | aynı yer |
 | Antigravity | IDE açıkken yerel sunucusu | yerel konuşma kayıtları |
 | Gemini | Google kota bilgisi (Gemini CLI girişinle, lisans gerekir) | yok |
 
-Ek olarak:
-- Claude için Mac'in anahtar zinciri izin ister, **"Her Zaman İzin Ver"** de.
-- Codex kayıtlarını okumak için `brew install zstd` gerekir.
-- Gemini için Gemini CLI kurulu ve girişli olmalı (`npm i -g @google/gemini-cli`).
+**Claude'un limiti nasıl okunuyor?** Üç yoldan biri, sırayla denenir:
+1. Claude Code'un durum satırı (Bildirim ve otomasyon'dan açarsan): her cevaptan sonra yerel dosyaya yazılır, ağ gerekmez.
+2. Anthropic'in kullanım bilgisi: resmi olmayan bir adres, hız sınırına takılabilir.
+3. Claude Code komutu: tek satırlık küçük bir Haiku isteği atıp limiti ölçer. Yalnızca yeni kullanım olunca ve en sık 5 dakikada bir yapılır. Terminal gerekmez.
 
-Alınamayan ya da tahmini olan veriler Ayarlar > Sağlayıcılar sayfasında "Kesin / Tahmini / Veri yok" diye açıkça yazar. Olmayan veri uydurulmaz.
+Hiçbiri alınamazsa son bilinen değer "Tahmini" diye gösterilir. Olmayan veri uydurulmaz: Ayarlar > Sağlayıcılar sayfasında her veri "Kesin / Tahmini / Veri yok" diye yazılır.
 
-## Windows
+## Limit görünmüyorsa
 
-Windows sürümü de var: tepsi simgesi, popover, Kullanım sayfası, temalar, hepsi aynı.
-
-**[Ullage-Setup.exe'yi indir (Windows)](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe)**
-(kurulum istemeyen için: [Ullage-Portable.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe))
-
-Ayrıntılar: [`windows/`](windows). İlk sürüm olduğu için Windows'ta henüz gerçek bir bilgisayarda denenmedi.
-
-## Bilgileri nereden alıyor?
-
-| Araç | Limit | Token |
-|---|---|---|
-| Claude | Anthropic'in kullanım bilgisi (Claude Code girişinle) | `~/.claude` klasörü |
-| Codex | `~/.codex` klasörü | aynı yer |
-| Antigravity | IDE açıkken yerel sunucusu | yerel konuşma kayıtları |
-| Gemini | Google kota bilgisi (Gemini CLI girişinle, lisans gerekir) | yok |
-
-Ek olarak:
-- Claude için Mac'in anahtar zinciri izin ister, **"Her Zaman İzin Ver"** de.
-- Codex kayıtlarını okumak için `brew install zstd` gerekir.
-- Gemini için Gemini CLI kurulu ve girişli olmalı (`npm i -g @google/gemini-cli`).
-
-Alınamayan ya da tahmini olan veriler Ayarlar > Sağlayıcılar sayfasında "Kesin / Tahmini / Veri yok" diye açıkça yazar. Olmayan veri uydurulmaz.
-
-## Windows
-
-Windows sürümü geliyor, çok yakında. Bkz. [`windows/`](windows).
+- **Claude:** Claude Code ya da Claude uygulamasında giriş yapılı olmalı. Terminalde `claude` yazıp `/login` diyebilirsin.
+- **Codex:** Kayıtlar sıkıştırılmışsa `brew install zstd` gerekir (Mac).
+- **Antigravity:** IDE açıkken okunur.
+- **Gemini:** `npm i -g @google/gemini-cli` ile kurup bir kez giriş yap.
+- Sağlayıcılar sayfasındaki **Kurulum kontrolü** bunların hangisinin eksik olduğunu gösterir.
 
 ## Notlar
 
-- Claude'un limit bilgisi resmi olmayan bir yoldan alınıyor, ileride değişebilir.
+- Claude'un limit bilgisi resmi olmayan yollardan alınıyor, ileride değişebilir.
+- Tahmini maliyet üçüncü taraf fiyat listelerine dayanır, yaklaşıktır; abonelik ücretini göstermez.
 - Logolar [lobe-icons](https://github.com/lobehub/lobe-icons) paketinden. Marka hakları sahiplerine ait.
 - Bu proje Anthropic, OpenAI veya Google ile bağlantılı değil.
 
