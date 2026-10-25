@@ -37,14 +37,24 @@ cat > "$APP/Contents/Info.plist" <<'EOF'
 </plist>
 EOF
 
-codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+# Her derlemede aynı kimlikle imzalanır: macOS izinleri (Belgeler, bildirim vb.) uygulamanın kimliğine bağlar, kimlik
+# her seferinde değişirse her yeni sürümde izinler yeniden sorulur. "Ullage Local Signing" yerel bir sertifikadır
+# (anahtarlıkta yoksa geçici imzaya düşülür; o durumda izinler her derlemede yeniden sorulur).
+SIGN_ID="-"
+if security find-identity -p codesigning 2>/dev/null | grep -q "Ullage Local Signing"; then SIGN_ID="Ullage Local Signing"; fi
+if ! codesign --force --sign "$SIGN_ID" "$APP" >/dev/null 2>&1; then
+  echo "Uyarı: '$SIGN_ID' ile imzalanamadı, geçici imza kullanılıyor"
+  codesign --force --sign - "$APP" >/dev/null 2>&1 || true
+fi
+echo "İmza: $SIGN_ID"
 echo "Hazır: $APP"
 
 # Kullanıcının açtığı uygulama /Applications içindedir (Belgeler gibi korumalı klasörlerde izin sorulur).
 # Orada varsa yeni sürüm onun üzerine yazılır; böylece tek kopya kalır.
 INSTALLED="/Applications/$APP_NAME.app"
 if [ -d "$INSTALLED" ]; then
-  ditto "$APP" "$INSTALLED"
+  ditto --norsrc --noextattr "$APP" "$INSTALLED"
+  xattr -cr "$INSTALLED" 2>/dev/null || true   # Finder bilgisi imzayı bozar
   echo "Kurulu uygulama güncellendi: $INSTALLED"
   # Derleme çıktısı ikinci bir "Ullage.app" olarak kalmasın (Spotlight'ta çift görünür). Paketleme zip için ona ihtiyaç duyar.
   if [ -z "${ULLAGE_PACKAGING:-}" ]; then
