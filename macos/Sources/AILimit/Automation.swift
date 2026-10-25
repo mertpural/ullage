@@ -103,8 +103,24 @@ enum WindowStarter {
 
     static var cliPath: String? {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return ["/opt/homebrew/bin/claude", "/usr/local/bin/claude", "\(home)/.local/bin/claude", "\(home)/.claude/local/claude"]
-            .first { FileManager.default.isExecutableFile(atPath: $0) }
+        if let p = ["/opt/homebrew/bin/claude", "/usr/local/bin/claude", "\(home)/.local/bin/claude", "\(home)/.claude/local/claude"]
+            .first(where: { FileManager.default.isExecutableFile(atPath: $0) }) { return p }
+        return desktopBundled
+    }
+
+    /// Terminal'e hiç komut kurmamış, yalnızca Claude uygulamasını kullananlarda uygulamanın kendi içindeki `claude` (en yeni sürüm).
+    private static var desktopBundled: String? {
+        let fm = FileManager.default
+        let root = fm.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support/Claude/claude-code")
+        guard let versions = try? fm.contentsOfDirectory(atPath: root.path) else { return nil }
+        for v in versions.sorted(by: { $0.compare($1, options: .numeric) == .orderedDescending }) {
+            let vdir = root.appendingPathComponent(v)
+            for sub in (try? fm.contentsOfDirectory(atPath: vdir.path)) ?? [] {
+                let bin = vdir.appendingPathComponent(sub).appendingPathComponent("claude.app/Contents/MacOS/claude").path
+                if fm.isExecutableFile(atPath: bin) { return bin }
+            }
+        }
+        return nil
     }
 
     /// Haiku'ya tek satırlık istek gönderir, oturum kaydı bırakmaz. Dönen metin durum mesajıdır.
