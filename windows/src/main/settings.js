@@ -14,6 +14,7 @@ const DEFAULTS = {
   trayStyle: 'logo',   // Windows tepsisi: 'logo' (veri yok, uygulama logosu) | 'bars' (5s ve haftalık çubukları) | 'number' (tek sayı, en düşük)
   widget: false,       // her zaman üstte küçük yüzen pencere
   widgetPos: null,     // { x, y } son konum
+  widgetScale: 1,      // widget boyutu: 0.7 ile 1.8 arası çarpan
 };
 
 class Settings {

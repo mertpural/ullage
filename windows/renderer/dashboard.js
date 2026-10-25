@@ -192,6 +192,14 @@
     sel.onchange = () => window.ullage.setSettings({ trayStyle: sel.value });
     main.append(setting('Tepsi simgesi', 'Windows tepsisinde ne gösterilsin. Logo seçiliyken simge veri göstermez, basınca uygulama açılır; limitler yüzen widget\'ta görünür. Çubuklar ve tek sayı seçeneklerinde simgeye basınca hızlı görünüm açılır.', sel));
     main.append(setting('Yüzen widget', 'Limitleri ekranda her zaman üstte duran küçük bir pencere olarak gösterir. Sürükleyerek yerini değiştirebilirsin.', toggle(S.settings.widget, (v) => window.ullage.setSettings({ widget: v }))));
+    const size = el('div', 'sizectl');
+    const pct = Math.round((Number(S.settings.widgetScale) || 1) * 100);
+    const val = el('b', null, pct + '%');
+    const rng = el('input'); rng.type = 'range'; rng.min = 70; rng.max = 180; rng.step = 10; rng.value = pct;
+    rng.oninput = () => { val.textContent = rng.value + '%'; };           // sürüklerken yalnızca yazı değişir
+    rng.onchange = () => window.ullage.setSettings({ widgetScale: Number(rng.value) / 100 }); // bırakınca uygulanır
+    size.append(rng, val);
+    main.append(setting('Widget boyutu', 'Yüzen widget\'ın büyüklüğünü ayarla. Widget kapalıysa bir sonraki açılışta uygulanır.', size));
   }
 
   function automationPage() {

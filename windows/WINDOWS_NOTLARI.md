@@ -18,6 +18,7 @@ Mac tarafına (`macos/`) dokunulmadı. GitHub'a hiçbir şey gönderilmedi, comm
 - Widget şeffaf kart olarak görünüyor (köşelerde arka plan duruyor). Fareyle sürüklenince x ve y konumu ayarlara kaydediliyor.
 - Giriş durumu ve cache okuma için birim testleri geçiyor.
 
+- Widget boyutu: Ayarlar > Görünüm'de %70 ile %180 arası kaydırıcı. %70, %150 ve %180'de widget'ın doğru boyutta çizildiğini ve %180'de ekran dışına taşmadığını gördüm. Kaydırıcıyı arayüzden sürüklemeyi denemedim, ayarı uygulamanın kendi çağrısıyla değiştirdim.
 - Logo modunda tepsi simgesi gizli simgelerde logo olarak görünüyor ve UI Automation ile basınca dashboard penceresi açıldı.
 
 ## Henüz denenmedi

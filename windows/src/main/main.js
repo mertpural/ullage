@@ -67,18 +67,30 @@ function widgetPosition(pos) {
   return screen.getAllDisplays().some(inside);
 }
 
+// Widget boyutu: içerik 252 px genişlikte tasarlandı, ayardaki çarpanla büyür ya da küçülür.
+const widgetWidth = () => Math.round(252 * Math.max(0.7, Math.min(1.8, Number(settings.v.widgetScale) || 1)));
+
+/** Pencere (boyut değişince) ekranın dışına taşmasın. */
+function keepOnScreen(win) {
+  const b = win.getBounds();
+  const wa = screen.getDisplayMatching(b).workArea;
+  const x = Math.max(wa.x, Math.min(b.x, wa.x + wa.width - b.width));
+  const y = Math.max(wa.y, Math.min(b.y, wa.y + wa.height - b.height));
+  if (x !== b.x || y !== b.y) win.setPosition(x, y, false);
+}
+
 function makeWidget() {
   const saved = settings.v.widgetPos;
   const useSaved = saved && widgetPosition(saved);
   // Şeffaf ve odak almayan pencere: arkadaki uygulamalar etkilenmez, yalnızca karta basınca tutulur.
   widget = new BrowserWindow({
-    width: 252, height: 120, show: false, frame: false, transparent: true, hasShadow: false, resizable: false, skipTaskbar: true,
+    width: widgetWidth(), height: 120, show: false, frame: false, transparent: true, hasShadow: false, resizable: false, skipTaskbar: true,
     alwaysOnTop: true, focusable: false, minimizable: false, maximizable: false, fullscreenable: false, backgroundColor: '#00000000',
     webPreferences: { preload: path.join(__dirname, 'preload.js') },
   });
   widget.setAlwaysOnTop(true, 'screen-saver');
   if (useSaved) widget.setPosition(saved.x, saved.y);
-  else { const wa = screen.getPrimaryDisplay().workArea; widget.setPosition(wa.x + wa.width - 252 - 4, wa.y + 4); }
+  else { const wa = screen.getPrimaryDisplay().workArea; widget.setPosition(wa.x + wa.width - widgetWidth() - 4, wa.y + 4); }
   widget.loadFile(R('widget.html'));
   widget.once('ready-to-show', () => widget.showInactive());
   let t = null;
@@ -214,6 +226,7 @@ ipcMain.handle('settings', (_e, patch) => {
   if ('login' in patch) app.setLoginItemSettings({ openAtLogin: !!patch.login });
   if ('enabled' in patch || 'trayStyle' in patch) updateTray();
   if ('widget' in patch) syncWidget();
+  if ('widgetScale' in patch && widget && !widget.isDestroyed()) { const [, h] = widget.getContentSize(); widget.setContentSize(widgetWidth(), h); keepOnScreen(widget); }
   broadcast();
   return settings.v;
 });
@@ -229,6 +242,7 @@ ipcMain.handle('copy-text', (_e, text) => clipboard.writeText(String(text)));ipc
   const bounds = win.getBounds();
   const bottomAnchored = win === popover && process.platform !== 'darwin';
   win.setContentSize(w, height);
+  if (win === widget) keepOnScreen(win);
   if (bottomAnchored && win.isVisible()) { const nb = win.getBounds(); win.setPosition(bounds.x, bounds.y + bounds.height - nb.height, false); }
 });
 

@@ -2,6 +2,7 @@
 (function () {
   const { PROVIDERS, applyTheme, bar, el } = window.ULL;
   const root = document.getElementById('root');
+  const stage = document.getElementById('stage');
   let S = null; // { usage, settings }
 
   function line(label, row) {
@@ -36,7 +37,9 @@
       const hint = { 'signed-out': 'Claude girişi yok: terminalde claude yazıp /login yap.', 'no-file': 'Claude girişi yok: terminalde claude yazıp /login yap.', expired: 'Claude oturumunun süresi dolmuş; Claude Code\'u açınca yenilenir.' }[c.loginState];
       root.append(el('div', 'w-empty', S.settings.enabled.includes('claude') && hint ? hint : 'Limit verisi yok. Ayrıntı için Ayarlar > Sağlayıcılar.'));
     }
-    requestAnimationFrame(() => window.ullage.resizePopover(Math.ceil(document.body.scrollHeight)));
+    const scale = Number(S.settings.widgetScale) || 1;
+    stage.style.transform = `scale(${scale})`;
+    requestAnimationFrame(() => window.ullage.resizePopover(Math.ceil(stage.offsetHeight * scale)));
   }
 
   window.ullage.onState((s) => { S = s; render(); });
