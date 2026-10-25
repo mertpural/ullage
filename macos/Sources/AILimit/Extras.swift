@@ -58,6 +58,7 @@ struct ProjectsCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(t, padding: 14)
         .onAppear { model.load() }
+        .onChange(of: state.includeCache) { _, _ in model.load() }
     }
 }
 
