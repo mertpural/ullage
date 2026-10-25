@@ -308,6 +308,9 @@ struct AutomationPage: View {
         SettingRow(title: L.t("Haftalık özet"), subtitle: L.t("Pazartesi sabahı geçen haftanın toplam token'ını, en yoğun gününü ve en çok kullandığın aracı bildirir. Bildirimler kapalıysa gelmez.")) {
             Toggle("", isOn: $state.weeklySummaryOn).toggleStyle(.switch).labelsHidden()
         }
+        SettingRow(title: L.t("Limiti Claude Code komutuyla ölç"), subtitle: L.t("Anthropic'in adresi hız sınırına takılınca ya da değer eskiyince, Claude Code komutu tek satırlık küçük bir Haiku isteği atıp güncel limiti ölçer. Terminal gerekmez, Claude uygulamasını kullananlar için de çalışır. Yalnızca yeni Claude kullanımı olunca ve en sık 5 dakikada bir yapılır; çok az token harcar.")) {
+            Toggle("", isOn: $state.cliProbe).toggleStyle(.switch).labelsHidden()
+        }
         SettingRow(title: L.t("Claude limitini Claude Code'dan al"), subtitle: L.t("Claude Code, her cevaptan sonra limit yüzdesini yerel bir dosyaya yazar; Ullage onu okur. Ağ gerekmez, Anthropic'in hız sınırına takılmaz. Açınca ~/.claude/settings.json dosyasına küçük bir durum satırı betiği eklenir (önce yedeği alınır, başka bir durum satırı varsa dokunulmaz). Yalnızca Claude Code çalışırken güncellenir.") + (state.statusLineMessage.isEmpty ? "" : " — " + L.t(state.statusLineMessage))) {
             Toggle("", isOn: $state.statusLineOn).toggleStyle(.switch).labelsHidden()
         }

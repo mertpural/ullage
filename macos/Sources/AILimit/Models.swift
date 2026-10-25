@@ -177,6 +177,10 @@ final class AppState: ObservableObject {
         }
     }
     @Published var statusLineMessage = ""
+    /// Limit alınamazsa Claude Code komutuyla ölç (tek satırlık küçük bir Haiku isteği; yalnızca yeni kullanım olunca, 5 dakikada bir).
+    @Published var cliProbe: Bool = UserDefaults.standard.object(forKey: "cliProbe") as? Bool ?? true {
+        didSet { UserDefaults.standard.set(cliProbe, forKey: "cliProbe") }
+    }
     var starterTimer: Timer?
     @Published var starterFireAt: Date?
     @Published var weeklySummaryOn: Bool = UserDefaults.standard.object(forKey: "weeklySummaryOn") as? Bool ?? true {

@@ -23,7 +23,9 @@ enum ClaudeProvider {
             let usedSince = store.latestEvent(provider: "claude") > r.fetchedAt.addingTimeInterval(90)
             if age < 600 || !usedSince {
                 u.limitConfidence = .exact
-                u.notes.append(L.t(r.fromStatusLine
+                u.notes.append(L.t(r.fromCLI
+                    ? "Limit: Claude Code komutundan ölçüldü (tek satırlık küçük bir istek)."
+                    : r.fromStatusLine
                     ? "Limit: Claude Code'un durum satırından (yerel, ağ gerekmez)."
                     : "Limit: Anthropic kullanım uç noktasından (resmi olmayan, Claude Code oturumuyla)."))
             } else {
@@ -100,6 +102,7 @@ struct ClaudeLimits {
     var fiveHourReset: Date?, weeklyReset: Date?
     var fetchedAt = Date()
     var fromStatusLine = false
+    var fromCLI = false
 }
 
 /// Claude Code'un Keychain'e yazdığı OAuth erişim anahtarıyla kullanım yüzdelerini okur.
@@ -163,6 +166,20 @@ enum ClaudeLimitAPI {
     /// Uç noktayı en fazla 5 dakikada bir sorgular; hız sınırına (429) takılırsa Retry-After süresince
     /// beklenir ve bu sürede son başarılı değer (yaşıyla birlikte) döndürülür.
     static func fetch() async -> Result<ClaudeLimits, LimitError> {
+        let r = await fetchViaAPI()
+        if case .success(let l) = r {
+            let age = Date().timeIntervalSince(l.fetchedAt)
+            if age < 600 || (l.fromStatusLine && age < 900) { return r }
+        }
+        // Taze değer yok (hız sınırı, bekleme ya da hiç kayıt yok): Claude'un kendi komutundan ölçmeyi dene.
+        if let p = await CLIProbe.measureIfDue(stored: { lock.lock(); defer { lock.unlock() }; return stored() }) {
+            lock.lock(); store(p); lock.unlock()
+            return .success(p)
+        }
+        return r
+    }
+
+    private static func fetchViaAPI() async -> Result<ClaudeLimits, LimitError> {
         // Claude Code'un durum satırından yazılan yerel dosya taze ise ağa hiç gidilmez.
         if let f = StatusLine.read(), Date().timeIntervalSince(f.fetchedAt) < 900 {
             lock.lock(); store(f); lock.unlock()

@@ -67,6 +67,10 @@ enum L {
         "İsteğe bağlı. Bildirim ve otomasyon sayfasından açarsan limit, ağa gitmeden Claude Code'dan okunur. Açtıktan sonra Claude Code'ta bir mesaj yazınca veri gelir.": "Optional. If you turn it on under Notifications & automation, the limit is read from Claude Code without the network. Data arrives after you send a message in Claude Code.",
         "Limit: Claude Code'un durum satırından (yerel, ağ gerekmez).": "Limit: from the Claude Code status line (local, no network).",
         "Başka bir durum satırı tanımlı, değiştirilmedi": "Another status line is already set; left unchanged",
+        "Limiti Claude Code komutuyla ölç": "Measure the limit with the Claude Code command",
+        "Anthropic'in adresi hız sınırına takılınca ya da değer eskiyince, Claude Code komutu tek satırlık küçük bir Haiku isteği atıp güncel limiti ölçer. Terminal gerekmez, Claude uygulamasını kullananlar için de çalışır. Yalnızca yeni Claude kullanımı olunca ve en sık 5 dakikada bir yapılır; çok az token harcar.":
+            "When Anthropic's endpoint is rate-limited or the value is stale, the Claude Code command sends one tiny Haiku request and measures the current limit. No terminal needed; it works for Claude app users too. Only runs after new Claude usage and at most every 5 minutes; uses very few tokens.",
+        "Limit: Claude Code komutundan ölçüldü (tek satırlık küçük bir istek).": "Limit: measured with the Claude Code command (one tiny request).",
         // Sayfa adları
         "Kullanım": "Usage", "Sağlayıcılar": "Providers", "Senkronizasyon": "Sync", "Menü çubuğu": "Menu bar",
         "Görünüm": "Appearance", "Bildirim ve otomasyon": "Notifications & automation", "Hakkında": "About",
