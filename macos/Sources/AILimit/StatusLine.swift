@@ -9,6 +9,9 @@ enum StatusLine {
     }
     static var dataFile: URL { dir.appendingPathComponent("claude-status.json") }
     static var script: URL { dir.appendingPathComponent("statusline.sh") }
+    /// Claude Code komutu bir kabuk üzerinden çalıştırır; yolda boşluk ("Application Support") olduğu için tırnak içinde yazılır.
+    static var command: String { "\"\(script.path)\"" }
+    private static func isOurs(_ cmd: String) -> Bool { cmd == command || cmd == script.path }
     static var settingsFile: URL { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/settings.json") }
 
     static let scriptText = """
@@ -24,13 +27,13 @@ enum StatusLine {
     /// Ayarlarda şu an bizim betiğimiz mi tanımlı?
     static var installed: Bool {
         guard let obj = settings(), let sl = obj["statusLine"] as? [String: Any], let cmd = sl["command"] as? String else { return false }
-        return cmd == script.path
+        return cmd == command
     }
 
     /// Başka bir durum satırı tanımlıysa ona dokunulmaz.
     static var otherInstalled: Bool {
         guard let obj = settings(), let sl = obj["statusLine"] as? [String: Any], let cmd = sl["command"] as? String else { return false }
-        return cmd != script.path
+        return !isOurs(cmd)
     }
 
     private static func settings() -> [String: Any]? {
@@ -53,10 +56,10 @@ enum StatusLine {
             let backup = settingsFile.deletingLastPathComponent().appendingPathComponent("settings.json.ullage-yedek")
             if !fm.fileExists(atPath: backup.path) { try? fm.copyItem(at: settingsFile, to: backup) }
         }
-        if let sl = obj["statusLine"] as? [String: Any], let cmd = sl["command"] as? String, cmd != script.path {
+        if let sl = obj["statusLine"] as? [String: Any], let cmd = sl["command"] as? String, !isOurs(cmd) {
             return "Başka bir durum satırı tanımlı, değiştirilmedi"
         }
-        obj["statusLine"] = ["type": "command", "command": script.path, "padding": 0]
+        obj["statusLine"] = ["type": "command", "command": command, "padding": 0]
         do {
             let data = try JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
             try data.write(to: settingsFile, options: .atomic)
@@ -66,7 +69,7 @@ enum StatusLine {
 
     /// Yalnızca bizim eklediğimiz tanımı kaldırır.
     static func uninstall() {
-        guard var obj = settings(), installed else { return }
+        guard var obj = settings(), let sl = obj["statusLine"] as? [String: Any], let cmd = sl["command"] as? String, isOurs(cmd) else { return }
         obj.removeValue(forKey: "statusLine")
         if let data = try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]) {
             try? data.write(to: settingsFile, options: .atomic)
