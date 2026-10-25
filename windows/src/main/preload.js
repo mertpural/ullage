@@ -10,4 +10,4 @@ contextBridge.exposeInMainWorld('ullage', {
   openDashboard: (page) => ipcRenderer.invoke('dashboard', page),
   resizePopover: (h) => ipcRenderer.send('resize-popover', h),
   quit: () => ipcRenderer.invoke('quit'),
-});
+  copyText: (text) => ipcRenderer.invoke('copy-text', text),});

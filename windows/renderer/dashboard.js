@@ -187,6 +187,11 @@
       card.append(pv, el('div', 'nm', t.name)); card.onclick = () => window.ullage.setSettings({ theme: t.id }); grid.append(card);
     }
     main.append(grid);
+    const sel = el('select');
+    for (const [v, l] of [['bars', '5s ve haftalık çubuklar'], ['number', 'Tek sayı (en düşük kalan)']]) { const o = el('option', null, l); o.value = v; if (v === (S.settings.trayStyle || 'bars')) o.selected = true; sel.append(o); }
+    sel.onchange = () => window.ullage.setSettings({ trayStyle: sel.value });
+    main.append(setting('Tepsi simgesi', 'Windows tepsisinde ne gösterilsin. Çubuklar, 5 saatlik ve haftalık limiti ayrı gösterir; sayılar için tepsi ipucunun üzerine gel ya da widget\'ı aç.', sel));
+    main.append(setting('Yüzen widget', 'Limitleri ekranda her zaman üstte duran küçük bir pencere olarak gösterir. Sürükleyerek yerini değiştirebilirsin.', toggle(S.settings.widget, (v) => window.ullage.setSettings({ widget: v }))));
   }
 
   function automationPage() {

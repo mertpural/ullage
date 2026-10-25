@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, Notification } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, screen, Notification, clipboard } = require('electron');
 const path = require('path');
 const { Store } = require('./store');
 const { Settings } = require('./settings');
@@ -8,7 +8,7 @@ const { refreshAll } = require('./sources');
 const R = (...p) => path.join(__dirname, '..', '..', 'renderer', ...p);
 const SHOTS = (process.argv.find((a) => a.startsWith('--shots=')) || '').slice(8);
 
-let store, settings, tray, popover, dashboard, iconWin;
+let store, settings, tray, popover, dashboard, widget, iconWin;
 let state = { usage: {}, daily: {}, updatedAt: 0, settings: {} };
 let timer = null, refreshing = false;
 
@@ -16,7 +16,7 @@ if (!app.requestSingleInstanceLock()) app.quit();
 if (process.platform === 'darwin' && app.dock) app.dock.hide();
 
 const publicState = () => ({ ...state, settings: settings.v });
-const broadcast = () => { for (const w of [popover, dashboard]) if (w && !w.isDestroyed()) w.webContents.send('state', publicState()); };
+const broadcast = () => { for (const w of [popover, dashboard, widget]) if (w && !w.isDestroyed()) w.webContents.send('state', publicState()); };
 
 // ---- pencereler
 function makePopover() {
@@ -61,22 +61,71 @@ function openDashboard(page) {
   } else { dashboard.show(); dashboard.focus(); dashboard.webContents.send('state', publicState()); }
 }
 
+// ---- küçük yüzen widget: her zaman üstte, görev çubuğunda görünmez, sürüklenebilir
+function widgetPosition(pos) {
+  const inside = (d) => pos.x >= d.workArea.x && pos.x < d.workArea.x + d.workArea.width && pos.y >= d.workArea.y && pos.y < d.workArea.y + d.workArea.height;
+  return screen.getAllDisplays().some(inside);
+}
+
+function makeWidget() {
+  const saved = settings.v.widgetPos;
+  const useSaved = saved && widgetPosition(saved);
+  // Şeffaf ve odak almayan pencere: arkadaki uygulamalar etkilenmez, yalnızca karta basınca tutulur.
+  widget = new BrowserWindow({
+    width: 240, height: 120, show: false, frame: false, transparent: true, hasShadow: false, resizable: false, skipTaskbar: true,
+    alwaysOnTop: true, focusable: false, minimizable: false, maximizable: false, fullscreenable: false, backgroundColor: '#00000000',
+    webPreferences: { preload: path.join(__dirname, 'preload.js') },
+  });
+  widget.setAlwaysOnTop(true, 'screen-saver');
+  if (useSaved) widget.setPosition(saved.x, saved.y);
+  else { const wa = screen.getPrimaryDisplay().workArea; widget.setPosition(wa.x + wa.width - 240 - 16, wa.y + 16); }
+  widget.loadFile(R('widget.html'));
+  widget.once('ready-to-show', () => widget.showInactive());
+  let t = null;
+  widget.on('move', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { if (widget && !widget.isDestroyed()) { const [x, y] = widget.getPosition(); settings.patch({ widgetPos: { x, y } }); } }, 400);
+  });
+  widget.on('closed', () => { widget = null; });
+}
+
+/** Ayara göre widget'ı açar ya da kapatır. */
+function syncWidget() {
+  if (settings.v.widget && (!widget || widget.isDestroyed())) makeWidget();
+  if (!settings.v.widget && widget && !widget.isDestroyed()) widget.close();
+}
+
 // ---- tepsi simgesi
-async function drawIcon(text, color) {
+/** spec: { kind: 'bars', bars: [{ label, left, color }] } ya da { kind: 'number', text, color }. 64 px tuval; Windows küçültür. */
+async function drawTray(spec) {
   if (!iconWin || iconWin.isDestroyed()) {
     iconWin = new BrowserWindow({ show: false, width: 64, height: 64, webPreferences: { offscreen: false } });
     await iconWin.loadURL('data:text/html,<canvas id=c width=64 height=64></canvas>');
   }
   const url = await iconWin.webContents.executeJavaScript(`(() => {
+    const spec = ${JSON.stringify(spec)};
     const c = document.getElementById('c'), g = c.getContext('2d');
     g.clearRect(0, 0, 64, 64);
-    g.fillStyle = ${JSON.stringify(color)}; g.beginPath(); g.roundRect(2, 2, 60, 60, 14); g.fill();
-    g.fillStyle = '#fff'; g.font = 'bold ${text.length > 2 ? 30 : 38}px Segoe UI, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillText(${JSON.stringify(text)}, 32, 35);
+    if (spec.kind === 'number') {
+      g.fillStyle = spec.color; g.beginPath(); g.roundRect(2, 2, 60, 60, 14); g.fill();
+      g.fillStyle = '#fff'; g.font = 'bold ' + (spec.text.length > 2 ? 30 : 38) + 'px Segoe UI, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(spec.text, 32, 35);
+    } else {
+      spec.bars.forEach((b, i) => {
+        const y = 12 + i * 26;
+        g.font = 'bold 26px Segoe UI, Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
+        g.lineJoin = 'round'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.65)'; g.strokeText(b.label, 0, y + 14);
+        g.fillStyle = '#f2f2f7'; g.fillText(b.label, 0, y + 14);
+        g.fillStyle = 'rgba(128,128,128,.45)'; g.beginPath(); g.roundRect(30, y + 5, 32, 18, 9); g.fill();
+        if (b.left > 0) { g.fillStyle = b.color; g.beginPath(); g.roundRect(30, y + 5, Math.max(9, 32 * b.left), 18, 9); g.fill(); }
+      });
+    }
     return c.toDataURL();
   })()`);
   return nativeImage.createFromDataURL(url);
 }
+
+const drawIcon = (text, color) => drawTray({ kind: 'number', text, color });
 
 const statusColor = (l) => (l > 0.4 ? '#22a559' : l > 0.15 ? '#d98200' : '#d93025');
 const NAMES = { claude: 'Claude', codex: 'Codex', gemini: 'Gemini', antigravity: 'Antigravity' };
@@ -84,7 +133,7 @@ const NAMES = { claude: 'Claude', codex: 'Codex', gemini: 'Gemini', antigravity:
 async function updateTray() {
   if (!tray) return;
   const enabled = settings.v.enabled;
-  const lines = []; const parts = []; let tightest = null;
+  const lines = []; const parts = []; let tightest = null, five = null, week = null;
   for (const p of enabled) {
     const w = state.usage[p] && state.usage[p].win; if (!w) continue;
     const pct = (r) => Math.round(r.left * 100);
@@ -92,11 +141,19 @@ async function updateTray() {
       lines.push(`${NAMES[p]}: ${w.five ? '5s ' + pct(w.five) + '%' : ''}${w.five && w.week ? '  ' : ''}${w.week ? 'H ' + pct(w.week) + '%' : ''}`);
       parts.push(`${w.five ? '5s ' + pct(w.five) + '%' : ''}${w.five && w.week ? ' ' : ''}${w.week ? 'H ' + pct(w.week) + '%' : ''}`);
     }
+    if (w.five && (!five || w.five.left < five.left)) five = w.five;
+    if (w.week && (!week || w.week.left < week.left)) week = w.week;
     for (const r of [w.five, w.week, ...w.other]) if (r && (tightest === null || r.left < tightest)) tightest = r.left;
   }
   tray.setToolTip(lines.length ? lines.join('\n') : 'Ullage');
-  if (process.platform === 'darwin') tray.setTitle(parts.join('   '));
-  else if (tightest !== null) tray.setImage(await drawIcon(String(Math.round(tightest * 100)), statusColor(tightest)));
+  if (process.platform === 'darwin') { tray.setTitle(parts.join('   ')); return; }
+  // Tepsi simgesi: 5 saatlik ve haftalık en kısıtlayıcı değerler, her ikisi de yoksa tek sayı.
+  if (settings.v.trayStyle !== 'number' && (five || week)) {
+    const bars = [];
+    if (five) bars.push({ label: '5s', left: five.left, color: statusColor(five.left) });
+    if (week) bars.push({ label: 'H', left: week.left, color: statusColor(week.left) });
+    tray.setImage(await drawTray({ kind: 'bars', bars }));
+  } else if (tightest !== null) tray.setImage(await drawIcon(String(Math.round(tightest * 100)), statusColor(tightest)));
 }
 
 // ---- bildirimler: eşikler pencere başına bir kez, ayrıca limit yenilenince
@@ -149,22 +206,24 @@ ipcMain.handle('settings', (_e, patch) => {
   settings.patch(patch);
   if ('interval' in patch) restartTimer();
   if ('login' in patch) app.setLoginItemSettings({ openAtLogin: !!patch.login });
-  if ('enabled' in patch) updateTray();
+  if ('enabled' in patch || 'trayStyle' in patch) updateTray();
+  if ('widget' in patch) syncWidget();
   broadcast();
   return settings.v;
 });
 ipcMain.handle('refresh', (_e, force) => doRefresh(force));
 ipcMain.handle('dashboard', (_e, page) => openDashboard(page));
 ipcMain.handle('quit', () => app.quit());
-ipcMain.on('resize-popover', (_e, h) => {
-  if (!popover || popover.isDestroyed()) return;
-  const height = Math.max(140, Math.min(640, Math.round(h)));
-  const [w, cur] = popover.getContentSize();
+ipcMain.handle('copy-text', (_e, text) => clipboard.writeText(String(text)));ipcMain.on('resize-popover', (e, h) => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  if (!win || win.isDestroyed()) return;
+  const height = Math.max(win === popover ? 140 : 90, Math.min(640, Math.round(h)));
+  const [w, cur] = win.getContentSize();
   if (Math.abs(cur - height) < 2) return;
-  const bounds = popover.getBounds();
-  const bottomAnchored = process.platform !== 'darwin';
-  popover.setContentSize(w, height);
-  if (bottomAnchored && popover.isVisible()) { const nb = popover.getBounds(); popover.setPosition(bounds.x, bounds.y + bounds.height - nb.height, false); }
+  const bounds = win.getBounds();
+  const bottomAnchored = win === popover && process.platform !== 'darwin';
+  win.setContentSize(w, height);
+  if (bottomAnchored && win.isVisible()) { const nb = win.getBounds(); win.setPosition(bounds.x, bounds.y + bounds.height - nb.height, false); }
 });
 
 // ---- açılış
@@ -178,8 +237,11 @@ app.whenReady().then(async () => {
   tray.on('click', togglePopover);
   tray.on('right-click', () => tray.popUpContextMenu(Menu.buildFromTemplate([
     { label: 'Kullanım', click: () => openDashboard('usage') }, { label: 'Ayarlar', click: () => openDashboard('providers') },
-    { label: 'Yenile', click: () => doRefresh(true) }, { type: 'separator' }, { label: 'Çıkış', click: () => app.quit() },
+    { label: 'Yenile', click: () => doRefresh(true) },
+    { label: 'Yüzen widget', type: 'checkbox', checked: !!settings.v.widget, click: (item) => { settings.patch({ widget: item.checked }); syncWidget(); } },
+    { type: 'separator' }, { label: 'Çıkış', click: () => app.quit() },
   ])));
+  syncWidget();
   await doRefresh(false);
   restartTimer();
   if (SHOTS) require('./shots').run({ SHOTS, app, drawIcon, popover: () => popover, openDashboard: (p) => { openDashboard(p); return dashboard; }, settings, broadcast, placePopover });

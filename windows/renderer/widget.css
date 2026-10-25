@@ -1,0 +1,18 @@
+/* Yüzen widget: pencere şeffaf, yalnızca #root kartı görünür ve sürüklenebilir. */
+html, body { background: transparent !important; }
+body { width: 240px; padding: 6px; overflow: hidden; }
+#root {
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  border: var(--bw) solid var(--border); border-radius: max(var(--radius), 14px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+  -webkit-app-region: drag;
+}
+.w-head { display: flex; justify-content: space-between; align-items: center; }
+.w-x { -webkit-app-region: no-drag; font-size: 14px; line-height: 1; color: var(--sub); padding: 0 2px; }
+.w-row { display: flex; flex-direction: column; gap: 2px; }
+.w-name { font-size: 12px; font-weight: 700; }
+.w-line { display: grid; grid-template-columns: 22px 40px 1fr; align-items: center; gap: 6px; }
+.w-line .bar { margin: 0; }
+.w-line b { font-size: 12px; font-variant-numeric: tabular-nums; }
+.w-empty { font-size: 11px; color: var(--sub); line-height: 1.4; }
