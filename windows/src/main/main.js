@@ -4,6 +4,7 @@ const path = require('path');
 const { Store } = require('./store');
 const { Settings } = require('./settings');
 const { refreshAll } = require('./sources');
+const statusline = require('./statusline');
 
 const R = (...p) => path.join(__dirname, '..', '..', 'renderer', ...p);
 const SHOTS = (process.argv.find((a) => a.startsWith('--shots=')) || '').slice(8);
@@ -203,8 +204,8 @@ async function doRefresh(force) {
   refreshing = true;
   try {
     const prev = state.usage;
-    const r = await refreshAll(store, { force, refreshLogin: settings.v.refreshLogin !== false });
-    state = { ...state, ...r };
+    const r = await refreshAll(store, { force, refreshLogin: settings.v.refreshLogin !== false, statusDir: app.getPath('userData'), cliProbe: settings.v.cliProbe !== false });
+    state ={ ...state, ...r };
     if (Object.keys(prev).length) notify(prev, r.usage);
     await updateTray();
     broadcast();
@@ -233,7 +234,21 @@ ipcMain.handle('settings', (_e, patch) => {
 ipcMain.handle('refresh', (_e, force) => doRefresh(force));
 ipcMain.handle('dashboard', (_e, page) => openDashboard(page));
 ipcMain.handle('quit', () => app.quit());
-ipcMain.handle('copy-text', (_e, text) => clipboard.writeText(String(text)));ipcMain.on('resize-popover', (e, h) => {
+ipcMain.handle('copy-text', (_e, text) => clipboard.writeText(String(text)));
+// Claude Code durum satırı: limit bilgisini Claude Code'dan almak için ayarına bir komut ekler / kaldırır.
+const statusLineInfo = () => {
+  const dir = app.getPath('userData');
+  const f = statusline.read(dir);
+  return { ...statusline.state(dir), ageMin: f ? Math.round((Date.now() - f.at) / 60000) : null };
+};
+ipcMain.handle('statusline-state', () => statusLineInfo());
+ipcMain.handle('statusline-set', (_e, on) => {
+  const dir = app.getPath('userData');
+  let error = null;
+  if (on) error = statusline.install(dir); else statusline.uninstall(dir);
+  doRefresh(true);
+  return { ...statusLineInfo(), error };
+});ipcMain.on('resize-popover', (e, h) => {
   const win = BrowserWindow.fromWebContents(e.sender);
   if (!win || win.isDestroyed()) return;
   const height = Math.max(win === popover ? 140 : 90, Math.min(640, Math.round(h)));

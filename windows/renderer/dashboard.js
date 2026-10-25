@@ -147,6 +147,7 @@
   }
 
   // ---- diğer sayfalar
+  let SL = null, SLerr = null; // Claude Code durum satırı: { installed, other, ageMin } ve son hata
   const setting = (title, sub, control) => { const r = el('div', 'card setting'); r.append(el('div', 't', `<b>${title}</b><span>${sub || ''}</span>`), control); return r; };
   const toggle = (on, fn) => { const s = el('div', 'switch' + (on ? ' on' : '')); s.onclick = () => fn(!on); return s; };
   const tagHtml = (c) => { const m = { exact: ['Kesin', '#34c759'], estimate: ['Tahmini', '#ff9f0a'], none: ['Veri yok', '#8e8e93'] }[c || 'none']; return `<span class="chip tag" style="color:${m[0] ? m[1] : ''};background:color-mix(in srgb, ${m[1]} 18%, transparent)">${m[0]}</span>`; };
@@ -205,6 +206,12 @@
   function automationPage() {
     main.append(setting('Limit bildirimleri', 'Kalan %15 ve %5\'in altına inince, ayrıca limit yenilenince bildirim gönderir.', toggle(S.settings.notify, (v) => window.ullage.setSettings({ notify: v }))));
     main.append(setting('Claude oturumunu otomatik yenile', 'Claude Code oturumunun süresi dolarsa (yaklaşık 8 saatte bir) limit değeri eski kalır. Bu açıkken Ullage, Claude Code\'a tek satırlık bir istek attırıp oturumunu yeniletir. Çok az token harcar, anahtarlarına dokunmaz.', toggle(S.settings.refreshLogin !== false, (v) => window.ullage.setSettings({ refreshLogin: v }))));
+    main.append(setting('Limiti Claude Code komutuyla ölç', 'Anthropic sorgusu işe yaramazsa, yalnızca yeni Claude kullanımı olunca ve en sık 5 dakikada bir Claude Code\'a tek satırlık küçük bir istek attırıp limiti ondan okur. Çok az token harcar. Claude uygulamasını kullanıyorsan da çalışır. Eski Claude Code sürümleri limit yüzdesini vermez.', toggle(S.settings.cliProbe !== false, (v) => window.ullage.setSettings({ cliProbe: v }))));
+    const slSub ='Claude Code her cevaptan sonra limit bilgisini bir dosyaya yazar, Ullage onu okur: ağ yok, hız sınırı yok. Yalnızca Claude Code çalışırken güncellenir. Açınca ~/.claude/settings.json içine bir durum satırı komutu eklenir (önce yedeği alınır). Başka bir durum satırın varsa dokunulmaz; kapatınca yalnızca bizim eklediğimiz kaldırılır.'
+      + (SL && SL.installed ? '<br><b>' + (SL.ageMin == null ? 'Henüz veri gelmedi: Claude Code\'u açıp bir mesaj yaz.' : `Son veri ${SL.ageMin} dk önce.`) + '</b>' : '')
+      + (SL && SL.other ? '<br><b>Şu an başka bir durum satırı tanımlı, değiştirilmedi.</b>' : '')
+      + (SLerr ? `<br><b style="color:#ff9f0a">${String(SLerr).replace(/[<>&]/g, '')}</b>` : '');
+    main.append(setting('Claude limitini Claude Code\'dan al', slSub, toggle(!!(SL && SL.installed), async (v) => { const r = await window.ullage.setStatusLine(v); SL = r; SLerr = r.error; render(); })));
     main.append(setting('Girişte otomatik başlat', 'Bilgisayara giriş yapınca uygulama kendiliğinden açılır.', toggle(S.settings.login, (v) => window.ullage.setSettings({ login: v }))));
   }
 
@@ -228,7 +235,7 @@
     else if (page === 'providers') providersPage();
     else if (page === 'sync') syncPage();
     else if (page === 'appearance') appearancePage();
-    else if (page === 'automation') automationPage();
+    else if (page === 'automation') { SL = await window.ullage.statusLineState(); automationPage(); }
     else aboutPage();
     main.scrollTop = keep;
   }
