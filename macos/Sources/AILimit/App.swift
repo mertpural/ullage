@@ -60,6 +60,20 @@ struct AILimitApp: App {
                         .environment(\.colorScheme, th.scheme ?? .dark)
                     }
                 }
+                let segs = VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Theme.all) { th in
+                        HStack(spacing: 24) {
+                            ThemedSegmented(t: th, items: [("24 saat", 0), ("7 gün", 1), ("30 gün", 2)], selection: .constant(1))
+                            ThemedSegmented(t: th, items: [("Sistem", 0), ("Türkçe", 1), ("English", 2)], selection: .constant(0))
+                        }
+                        .padding(10).frame(width: 560, alignment: .leading).background(th.bg)
+                        .environment(\.colorScheme, th.scheme ?? .dark)
+                    }
+                }
+                if let img = ImageRenderer(content: segs.padding(12).background(Color(white: 0.5))).nsImage, let tiff = img.tiffRepresentation,
+                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
+                    try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("segs.png"))
+                }
                 let cr = ImageRenderer(content: checks.padding(12).background(Color(white: 0.5)))
                 cr.scale = 2
                 if let img = cr.nsImage, let tiff = img.tiffRepresentation,

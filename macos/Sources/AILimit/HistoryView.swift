@@ -217,12 +217,8 @@ struct HistoryPage: View {
             HeatmapCard(model: model)
 
             HStack(spacing: 10) {
-                Picker("", selection: $model.range) {
-                    ForEach(HistoryRange.allCases) { Text(L.t($0.rawValue)).tag($0) }
-                }.pickerStyle(.segmented).labelsHidden().frame(width: 260)
-                Picker("", selection: $model.group) {
-                    ForEach(GroupBy.allCases) { Text(L.t($0.rawValue)).tag($0) }
-                }.pickerStyle(.segmented).labelsHidden().frame(width: 180)
+                ThemedSegmented(t: t, items: HistoryRange.allCases.map { (L.t($0.rawValue), $0) }, selection: $model.range)
+                ThemedSegmented(t: t, items: GroupBy.allCases.map { (L.t($0.rawValue), $0) }, selection: $model.group)
                 Spacer(minLength: 12)
                 ThemedCheck(t: t, title: L.t("Cache dahil"), isOn: $model.includeCache)
             }

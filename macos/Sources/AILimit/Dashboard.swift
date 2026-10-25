@@ -276,12 +276,7 @@ struct AppearancePage: View {
     var body: some View {
         let t = state.theme
         SettingRow(title: L.t("Dil"), subtitle: L.t("Arayüz dilini seç. Değişiklik hemen uygulanır.")) {
-            Picker("", selection: $state.language) {
-                Text(L.t("Sistem")).tag("system")
-                Text("Türkçe").tag("tr")
-                Text("English").tag("en")
-            }
-            .pickerStyle(.segmented).labelsHidden().frame(width: 240)
+            ThemedSegmented(t: t, items: [(L.t("Sistem"), "system"), ("Türkçe", "tr"), ("English", "en")], selection: $state.language)
         }
         Text(L.t("Tema popover'a ve bu pencereye uygulanır. Menü çubuğu her zaman sistemin açık/koyu görünümüne uyar.")).font(t.font(12)).foregroundStyle(t.sub)
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {

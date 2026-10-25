@@ -285,3 +285,89 @@ struct ThemedCheck: View {
         }
     }
 }
+
+// MARK: - Temaya uyan seçici (segmented)
+
+/// Sistemin segmentli seçicisi yerine her temanın kendi diliyle çizilen seçici.
+struct ThemedSegmented<V: Hashable>: View {
+    let t: Theme
+    let items: [(label: String, value: V)]
+    @Binding var selection: V
+
+    var body: some View {
+        container {
+            HStack(spacing: spacing) {
+                ForEach(Array(items.enumerated()), id: \.offset) { _, it in
+                    Button { selection = it.value } label: { segment(it.label, on: selection == it.value) }
+                        .buttonStyle(.plain)
+                }
+            }
+        }
+        .fixedSize()
+    }
+
+    private var spacing: CGFloat {
+        switch t.id {
+        case "terminal": 6
+        case "sticker", "brutal": 6
+        case "paper": 14
+        default: 2
+        }
+    }
+
+    @ViewBuilder private func container<C: View>(@ViewBuilder _ c: () -> C) -> some View {
+        switch t.id {
+        case "terminal", "sticker", "brutal", "paper":
+            c()
+        case "neon":
+            c().padding(3).background(RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.35)))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(t.accent.opacity(0.5), lineWidth: 1))
+        case "glass":
+            c().padding(3).background(Color.white.opacity(0.08), in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+        default:
+            c().padding(3).background(t.card, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(t.border.opacity(0.8), lineWidth: 1))
+        }
+    }
+
+    @ViewBuilder private func segment(_ label: String, on: Bool) -> some View {
+        switch t.id {
+        case "terminal":
+            Text(on ? "[\(label)]" : " \(label) ")
+                .font(.system(size: 12, weight: on ? .bold : .regular, design: .monospaced))
+                .foregroundStyle(on ? Color.black : t.accent)
+                .padding(.horizontal, 8).padding(.vertical, 4)
+                .background(on ? t.accent : Color.clear)
+        case "sticker":
+            Text(label).font(t.font(12, on ? .bold : .medium)).foregroundStyle(Color.black)
+                .padding(.horizontal, 12).padding(.vertical, 5)
+                .background(RoundedRectangle(cornerRadius: 8).fill(on ? t.accent : t.card))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.black, lineWidth: 2))
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.black).offset(x: on ? 1.5 : 0, y: on ? 1.5 : 0))
+        case "paper":
+            VStack(spacing: 2) {
+                Text(label).font(t.font(12, on ? .bold : .regular)).foregroundStyle(on ? t.text : t.sub)
+                Rectangle().fill(on ? t.accent : Color.clear).frame(height: 1.5)
+            }
+        case "neon":
+            Text(label).font(t.font(12, on ? .bold : .medium)).foregroundStyle(on ? t.accent : t.sub)
+                .padding(.horizontal, 12).padding(.vertical, 5)
+                .background(RoundedRectangle(cornerRadius: 6).fill(t.accent.opacity(on ? 0.22 : 0)))
+                .shadow(color: t.accent.opacity(on ? 0.8 : 0), radius: 4)
+        case "brutal":
+            Text(label).font(t.font(12, .heavy)).foregroundStyle(on ? t.card : Color.black)
+                .padding(.horizontal, 12).padding(.vertical, 5)
+                .background(Rectangle().fill(on ? Color.black : t.card))
+                .overlay(Rectangle().stroke(Color.black, lineWidth: 3))
+        case "glass":
+            Text(label).font(t.font(12, on ? .semibold : .regular)).foregroundStyle(on ? Color.white : Color.white.opacity(0.7))
+                .padding(.horizontal, 12).padding(.vertical, 5)
+                .background(Capsule().fill(Color.white.opacity(on ? 0.28 : 0)))
+        default:
+            Text(label).font(t.font(12, on ? .semibold : .regular)).foregroundStyle(on ? t.text : t.sub)
+                .padding(.horizontal, 12).padding(.vertical, 5)
+                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(on ? t.accent.opacity(0.28) : Color.clear))
+        }
+    }
+}
