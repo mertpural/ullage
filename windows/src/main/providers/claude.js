@@ -53,13 +53,25 @@ function ingest(store) {
   }
 }
 
+/** ~/.claude/.credentials.json'u okur; dosya yoksa ya da bozuksa undefined. */
+function readCredentials() {
+  try { return JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', '.credentials.json'), 'utf8')); } catch { return undefined; }
+}
+
+/** Girişin durumu, arayüzün doğru yönergeyi göstermesi için: 'ok' | 'expired' | 'signed-out' | 'no-file'.
+ *  Dosya var ama claudeAiOauth yoksa (yalnızca MCP girişi) Claude Code'a hiç giriş yapılmamış demektir. */
+function loginState(creds, now = Date.now()) {
+  if (creds === undefined) return 'no-file';
+  const o = creds && creds.claudeAiOauth;
+  if (!o || !o.accessToken) return 'signed-out';
+  if (o.expiresAt && o.expiresAt < now) return 'expired';
+  return 'ok';
+}
+
 /** Claude Code oturumu: Windows/Linux'ta ~/.claude/.credentials.json, macOS'ta Keychain. */
 function loadToken() {
-  try {
-    const j = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.claude', '.credentials.json'), 'utf8'));
-    const o = j.claudeAiOauth;
-    if (o && o.accessToken) return { token: o.accessToken, expires: o.expiresAt || null };
-  } catch { /* dosya yok */ }
+  const o = (readCredentials() || {}).claudeAiOauth;
+  if (o && o.accessToken) return { token: o.accessToken, expires: o.expiresAt || null };
   if (process.platform === 'darwin') {
     try {
       const out = execFileSync('/usr/bin/security', ['find-generic-password', '-s', 'Claude Code-credentials', '-w'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -118,13 +130,26 @@ function invalidate(store) {
   if (Date.now() - (store.kv('claudeLastAttempt') || 0) > 30 * 1000) { memo = null; store.kv('claudeLastAttempt', 0); }
 }
 
+/** macOS'ta giriş Keychain'de olabilir; diğer sistemlerde yalnızca dosyaya bakılır. */
+function currentLoginState() {
+  if (process.platform === 'darwin' && loadToken()) return 'ok';
+  return loginState(readCredentials());
+}
+
+const LOGIN_NOTES = {
+  'signed-out': 'Claude Code girişi yok. Terminalde `claude` çalıştır, /login yaz.',
+  'no-file': 'Claude Code kurulu değil ya da hiç giriş yapılmamış (.credentials.json yok).',
+  expired: 'Claude Code oturumunun süresi dolmuş; Claude Code\'u açınca yenilenir.',
+};
+
 async function read(store, opts = {}) {
   ingest(store);
   const now = Date.now();
   const sod = new Date(); sod.setHours(0, 0, 0, 0);
-  const u = { limitConfidence: 'none', tokenConfidence: 'exact', todayTokens: store.billableSince('claude', sod.getTime()), extra: [], notes: [
-    'Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç.',
-  ] };
+  const u = { limitConfidence: 'none', tokenConfidence: 'exact', todayTokens: store.billableSince('claude', sod.getTime()),
+    cacheReadToday: store.cacheReadSince('claude', sod.getTime()), loginState: currentLoginState(), extra: [], notes: [
+      'Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç.',
+    ] };
   const r = await fetchLimits(store, opts);
   if (r.ok) {
     // Sıfırlanma saati geçmiş pencere yenilenmiştir: eski değer yerine %100.
@@ -140,9 +165,11 @@ async function read(store, opts = {}) {
       u.notes.push('Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor; güncel olmayabilir.');
     }
   } else {
-    u.notes.push(`Limit yüzdesi alınamadı: ${r.error}`);
+    u.notes.push(LOGIN_NOTES[u.loginState] || `Limit yüzdesi alınamadı: ${r.error}`);
   }
+  // Eski bir değer varsa limit gösterilse bile girişin durumunu not olarak ekle.
+  if (r.ok && LOGIN_NOTES[u.loginState]) u.notes.push(LOGIN_NOTES[u.loginState]);
   return u;
 }
 
-module.exports = { read, invalidate, ingest };
+module.exports = { read, invalidate, ingest, loginState };

@@ -76,6 +76,13 @@ class Store {
     return t;
   }
 
+  /** Cache okumaları: harcanan token'a dahil değil, ayrıca gösterilmek için. */
+  cacheReadSince(provider, sinceMs) {
+    let t = 0;
+    for (const e of this.eventsOf(provider)) if (e[0] >= sinceMs) t += e[5];
+    return t;
+  }
+
   /** Son `days` günün (bugün dahil) günlük toplamları, eskiden yeniye. */
   dailyTotals(provider, days) {
     const start = new Date(); start.setHours(0, 0, 0, 0); start.setDate(start.getDate() - (days - 1));
