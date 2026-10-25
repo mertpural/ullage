@@ -1,6 +1,6 @@
 {
   "name": "ullage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Menü çubuğunda / sistem tepsisinde AI limit ve token takibi",
   "main": "src/main/main.js",
   "license": "MIT",
