@@ -15,6 +15,22 @@ enum HistoryRange: String, CaseIterable, Identifiable {
     }
 }
 
+extension HistoryRange {
+    /// Grafiğin yatay ekseni: aralığın tamamı. Veri az olsa bile (örneğin yalnızca bugün) bir günlük çubuk tüm genişliği doldurmasın.
+    var domain: ClosedRange<Date> {
+        let cal = Calendar.current
+        switch self {
+        case .day:
+            let start = cal.dateInterval(of: .hour, for: since)?.start ?? since
+            let end = cal.dateInterval(of: .hour, for: Date())?.end ?? Date()
+            return start...end
+        case .week, .month:
+            let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
+            return since...end
+        }
+    }
+}
+
 enum GroupBy: String, CaseIterable, Identifiable {
     case provider = "Sağlayıcı", model = "Model"
     var id: String { rawValue }
@@ -22,7 +38,7 @@ enum GroupBy: String, CaseIterable, Identifiable {
 
 @MainActor
 final class HistoryModel: ObservableObject {
-    @Published var range: HistoryRange = .week { didSet { reload() } }
+    @Published var range: HistoryRange = HistoryRange(rawValue: ProcessInfo.processInfo.environment["AILIMIT_RANGE"] ?? "") ?? .week { didSet { reload() } }
     @Published var group: GroupBy = .provider
     @Published var filter: String? = nil
     @Published var points: [HistoryStore.Point] = []
@@ -265,6 +281,7 @@ struct HistoryPage: View {
                         .foregroundStyle(by: .value("Grup", model.label(p)))
                         .cornerRadius(3)
                     }
+                    .chartXScale(domain: model.range.domain)
                     .chartForegroundStyleScale(domain: model.totals.map(\.0), range: model.totals.map { color(for: $0.0) })
                     .chartLegend(.hidden)
                     .chartYAxis {
