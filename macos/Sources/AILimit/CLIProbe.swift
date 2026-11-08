@@ -11,6 +11,8 @@ enum CLIProbe {
     nonisolated(unsafe) private static let launchedAt = Date()
     static var available: Bool { enabled && WindowStarter.cliPath != nil }
 
+    static var authExpired: Bool { UserDefaults.standard.bool(forKey: "claudeAuthExpired") }
+
     static var enabled: Bool { UserDefaults.standard.object(forKey: "cliProbe") as? Bool ?? true }
 
     static func measureIfDue(stored: () -> ClaudeLimits?) async -> ClaudeLimits? {
@@ -49,7 +51,11 @@ enum CLIProbe {
         reader.async { data = out.fileHandleForReading.readDataToEndOfFile(); done.signal() }
         if done.wait(timeout: .now() + 90) == .timedOut { p.terminate(); return nil }
         p.waitUntilExit()
-        return parse(data)
+        let r = parse(data)
+        let text = String(decoding: data, as: UTF8.self)
+        let expired = r == nil && (text.contains("Failed to authenticate") || text.contains("OAuth session expired") || text.contains("Not logged in") || text.contains("Please run /login"))
+        UserDefaults.standard.set(expired, forKey: "claudeAuthExpired")
+        return r
     }
 
     /// Çıktıdaki `rate_limit_event` satırından limitleri okur (utilization 0...1 = kullanılan oran).

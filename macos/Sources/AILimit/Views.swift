@@ -395,7 +395,9 @@ struct OverviewCard: View {
             if usage.rows.isEmpty {
                 Text(L.t("Veri alınamadı. Ayrıntı için Sağlayıcılar sayfasına bak.")).font(t.font(10)).foregroundStyle(t.sub)
             }
-            if let st = usage.staleSince {
+            if usage.authExpired {
+                Text(L.t("Claude girişi süresi dolmuş: Terminal'de claude yazıp /login yap.")).font(t.font(10)).foregroundStyle(.orange)
+            } else if let st = usage.staleSince {
                 Text(L.f("Eski değer: %@ (güncellenemedi)", PopoverView.time.string(from: st))).font(t.font(10)).foregroundStyle(.orange)
             }
             FootnoteLines(provider: provider, usage: usage)
@@ -511,7 +513,9 @@ struct ProviderDetail: View {
                 Spacer()
             }
 
-            if let st = usage.staleSince {
+            if usage.authExpired {
+                Text(L.t("Claude girişi süresi dolmuş: Terminal'de claude yazıp /login yap.")).font(t.font(10)).foregroundStyle(.orange)
+            } else if let st = usage.staleSince {
                 Text(L.f("Eski değer: %@ (güncellenemedi)", PopoverView.time.string(from: st))).font(t.font(10)).foregroundStyle(.orange)
             }
             if usage.rows.isEmpty {

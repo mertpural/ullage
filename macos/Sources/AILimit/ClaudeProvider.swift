@@ -19,6 +19,7 @@ enum ClaudeProvider {
             u.fiveHourReset = r.fiveHourReset
             u.weeklyReset = r.weeklyReset
             let age = Date().timeIntervalSince(r.fetchedAt)
+            u.authExpired = CLIProbe.authExpired && !r.fromCLI
             // Limit yalnızca Claude kullanılınca değişir: değerden sonra yerel kullanım yoksa eski sayılmaz.
             let usedSince = store.latestEvent(provider: "claude") > r.fetchedAt.addingTimeInterval(90)
             if age < 600 || !usedSince {
@@ -35,6 +36,7 @@ enum ClaudeProvider {
                 u.notes.append(L.f("Anthropic hız sınırı uyguladığı için son alınan değer gösteriliyor (%@); güncel olmayabilir.", f.string(from: r.fetchedAt)))
             }
         case .failure(let err):
+            u.authExpired = CLIProbe.authExpired
             u.notes.append(L.f("Limit yüzdesi alınamadı: %@", err.message))
         }
         return u

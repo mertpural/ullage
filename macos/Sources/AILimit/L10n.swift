@@ -179,7 +179,7 @@ enum L {
         "%@ için kalan %@ altına düştü (%lld%%).": "%@ remainder dropped below %@ (%lld%%).",
         "%@ penceresi sıfırlandı, %%%lld kaldı.": "%@ window reset, %%%lld left.",
         "Geçen hafta %@ token.": "Last week: %@ tokens.", " En yoğun gün %@ (%@).": " Busiest day %@ (%@).", " En çok %@.": " Most used: %@.",
-        "claude komutu bulunamadı": "claude command not found", "Zaman aşımı": "Timed out", "Limit henüz ölçülmedi": "Limit not measured yet", "Yeni pencere başlatıldı": "New window started",
+        "claude komutu bulunamadı": "claude command not found", "Zaman aşımı": "Timed out", "Limit henüz ölçülmedi": "Limit not measured yet", "Claude girişi süresi dolmuş: Terminal'de claude yazıp /login yap.": "Claude sign-in expired: run claude in Terminal and type /login.", "Yeni pencere başlatıldı": "New window started",
         "Başlatılıyor…": "Starting…",
         // Sağlayıcı notları ve hataları
         "Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç.": "Tokens: from ~/.claude logs (Claude Code and Desktop), cache reads excluded.",

@@ -91,6 +91,7 @@ struct Usage {
     var todayTokens: Int?
     /// Limit değeri güncellenemediyse en son alındığı zaman (eski değer gösteriliyor demektir).
     var staleSince: Date?
+    var authExpired = false
     var limitConfidence: Confidence = .none
     var tokenConfidence: Confidence = .none
     var notes: [String] = []
