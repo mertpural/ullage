@@ -8,6 +8,9 @@ enum CLIProbe {
     /// İki ölçüm arası en az 5 dakika. Yalnızca son değerden sonra yeni yerel Claude kullanımı olduysa ölçülür.
     private static let minInterval: TimeInterval = 300
 
+    nonisolated(unsafe) private static let launchedAt = Date()
+    static var available: Bool { enabled && WindowStarter.cliPath != nil }
+
     static var enabled: Bool { UserDefaults.standard.object(forKey: "cliProbe") as? Bool ?? true }
 
     static func measureIfDue(stored: () -> ClaudeLimits?) async -> ClaudeLimits? {
@@ -15,6 +18,8 @@ enum CLIProbe {
         let d = UserDefaults.standard
         let last = Date(timeIntervalSince1970: d.double(forKey: lastKey))
         guard Date().timeIntervalSince(last) >= minInterval else { return nil }
+        // Uygulama her açıldığında istek gitmesin: açılıştan sonraki 3 dakika, kayıtlı bir değer varsa beklenir.
+        if stored() != nil, Date().timeIntervalSince(launchedAt) < 180 { return nil }
         let ref = max(stored()?.fetchedAt ?? .distantPast, last)
         let activity = HistoryStore.shared.latestEvent(provider: "claude")
         guard stored() == nil || activity > ref else { return nil }

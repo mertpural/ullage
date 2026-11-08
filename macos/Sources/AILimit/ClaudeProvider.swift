@@ -187,6 +187,12 @@ enum ClaudeLimitAPI {
             lock.lock(); store(f); lock.unlock()
             return .success(f)
         }
+        // Claude komutu varsa Anthropic'in sert sınırlı kullanım adresine hiç gidilmez (saatlerce 429 bekletiyordu);
+        // ölçümü CLIProbe yapar, aralarda son değer gösterilir.
+        if CLIProbe.available {
+            if let old = stored() { return .success(old) }
+            return .failure(LimitError(message: L.t("Limit henüz ölçülmedi")))
+        }
         lock.lock()
         if let c = cached, Date().timeIntervalSince(c.at) < minInterval { lock.unlock(); return c.result }
         let waiting = Date() < backoffUntil
