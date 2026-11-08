@@ -42,6 +42,7 @@ EOF
 # (anahtarlıkta yoksa geçici imzaya düşülür; o durumda izinler her derlemede yeniden sorulur).
 SIGN_ID="-"
 if security find-identity -p codesigning 2>/dev/null | grep -q "Ullage Local Signing"; then SIGN_ID="Ullage Local Signing"; fi
+xattr -cr "$APP" 2>/dev/null; dot_clean -m "$APP" 2>/dev/null
 if ! codesign --force --sign "$SIGN_ID" "$APP" >/dev/null 2>&1; then
   echo "Uyarı: '$SIGN_ID' ile imzalanamadı, geçici imza kullanılıyor"
   codesign --force --sign - "$APP" >/dev/null 2>&1 || true
