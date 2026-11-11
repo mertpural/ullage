@@ -6,5 +6,5 @@ build/
 node_modules/
 dist/
 site-claude-design/
-site/downloads/*.exe
 site-lite/
+site/downloads/*.exe

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ullage: kalan hakkın bir bakışta</title>
-<meta name="description" content="Claude, Codex ve Antigravity için 5 saatlik ve haftalık kalan hakkını menü çubuğunda (Windows'ta tepside) gösteren ücretsiz uygulama. Mac ve Windows.">
+<meta name="description" content="Claude, Codex ve Antigravity için 5 saatlik ve haftalık kalan hakkını menü çubuğunda gösteren ücretsiz uygulama. Mac için.">
 <meta property="og:title" content="Ullage: kalan hakkın bir bakışta">
 <meta property="og:description" content="Yapay zekâ servislerinde ne kadar hakkın kaldığını menü çubuğunda sessizce gösterir.">
 <meta property="og:image" content="img/ullage-icon.png">
@@ -179,9 +179,8 @@ footer a:hover { color: var(--text); }
     <p class="lead" data-reveal data-i="lead">Ullage, kullandığın yapay zekâ servislerinde ne kadar hakkın kaldığını menü çubuğunda sessizce gösterir. Sayım yok, sürpriz yok.</p>
     <div class="actions" data-reveal>
       <a class="btn primary" href="#mac"><span data-i="dlMac">macOS için indir</span> <span aria-hidden="true">↓</span></a>
-      <a class="btn" href="#windows" data-i="dlWin">Windows için indir</a>
     </div>
-    <span class="meta" data-reveal data-i="meta">Ücretsiz · macOS 14+ · Windows 10+</span>
+    <span class="meta" data-reveal data-i="meta">Ücretsiz · macOS 14+</span>
   </div>
 
   <div data-reveal>
@@ -242,19 +241,6 @@ footer a:hover { color: var(--text); }
         <p class="note" id="mac-note"></p>
       </article>
 
-      <article class="plat" id="windows" data-reveal>
-        <h3>Windows</h3>
-        <a class="btn primary" data-link="winSetup" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe"><span data-i="dlWinExe">Ullage-Setup.exe indir</span> <span aria-hidden="true">↓</span></a>
-        <p class="alt"><span data-i="altText">Kurulum istemiyorsan:</span> <a data-link="winPortable" href="https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe">Ullage-Portable.exe</a> <span data-i="altNote">(çift tıkla çalışır, kendini güncellemez).</span></p>
-        <ul class="specs">
-          <li><span data-i="sVer">Sürüm</span><span>0.2.0</span></li>
-          <li><span data-i="sSize">Boyut</span><span>124 MB</span></li>
-          <li><span data-i="sNeed">Gerekli</span><span data-i="winNeed">Windows 10 ve 11, 64 bit</span></li>
-          <li><span data-i="sTried">Denendi</span><span>Windows 11</span></li>
-        </ul>
-        <ol class="how-to" id="win-steps"></ol>
-        <p class="note" id="win-note"></p>
-      </article>
     </div>
   </div>
 </section>
@@ -274,13 +260,6 @@ footer a:hover { color: var(--text); }
 
 <script>
 (function () {
-  // Windows dosyaları 124 MB: bazı ücretsiz sitelere sığmaz (Vercel, Cloudflare Pages).
-  // Siteye sığmazsa dosyaları başka bir yere koyup (Drive, GitHub Releases) adreslerini buraya yaz.
-  var LINKS = {
-    winSetup: 'downloads/Ullage-Setup.exe',
-    winPortable: 'downloads/Ullage-Portable.exe'
-  };
-  document.querySelectorAll('[data-link]').forEach(function (a) { var u = LINKS[a.getAttribute('data-link')]; if (u) a.setAttribute('href', u); });
 
   var COPY = {
     tr: {
@@ -288,7 +267,7 @@ footer a:hover { color: var(--text); }
       eyebrow: 'Yapay zekâ kullanım takibi',
       h1: 'Limitine çarpmadan <em>önce</em> bil.',
       lead: 'Ullage, kullandığın yapay zekâ servislerinde ne kadar hakkın kaldığını menü çubuğunda sessizce gösterir. Sayım yok, sürpriz yok.',
-      dlMac: 'macOS için indir', dlWin: 'Windows için indir', meta: 'Ücretsiz · macOS 14+ · Windows 10+',
+      dlMac: 'macOS için indir', dlWin: 'Windows için indir', meta: 'Ücretsiz · macOS 14+',
       avg: 'Ortalama kalan', live: 'canlı', resetIn: 'sonra yenilenir', h: 's', m: 'dk',
       demoNote: 'Örnek değerler. Uygulama kendi hesabından okur.',
       planFive: '5 saatlik', planWeek: 'Haftalık',
@@ -313,7 +292,7 @@ footer a:hover { color: var(--text); }
       eyebrow: 'AI usage tracking',
       h1: 'Know <em>before</em> you hit the limit.',
       lead: 'Ullage quietly shows how much usage you have left across your AI services, right in the menu bar. No counting, no surprises.',
-      dlMac: 'Download for macOS', dlWin: 'Download for Windows', meta: 'Free · macOS 14+ · Windows 10+',
+      dlMac: 'Download for macOS', dlWin: 'Download for Windows', meta: 'Free · macOS 14+',
       avg: 'Average left', live: 'live', resetIn: 'until reset', h: 'h', m: 'm',
       demoNote: 'Sample values. The app reads your own account.',
       planFive: '5-hour', planWeek: 'Weekly',
@@ -391,9 +370,7 @@ footer a:hover { color: var(--text); }
       return '<div class="feat" data-reveal><span class="t">' + f[0] + '</span><span class="b">' + f[1] + '</span></div>';
     }).join('');
     $('mac-steps').innerHTML = t.macSteps.map(function (s) { return '<li>' + s + '</li>'; }).join('');
-    $('win-steps').innerHTML = t.winSteps.map(function (s) { return '<li>' + s + '</li>'; }).join('');
     $('mac-note').innerHTML = t.macNote;
-    $('win-note').innerHTML = t.winNote;
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === state.lang)); });
     document.title = state.lang === 'tr' ? 'Ullage: kalan hakkın bir bakışta' : 'Ullage: see what\'s left at a glance';
     renderDemo();

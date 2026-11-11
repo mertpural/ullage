@@ -24,7 +24,6 @@ Benzer açık kaynak uygulamalar: CodexBar (steipete), ClaudeBar (tddworks). Aş
 - [ ] **Pencere başlatıcı** (opt-in): 5 saatlik limit sıfırlanınca, ya da sabah belirlenen saatte, en ucuz modele (Haiku) çok kısa bir mesaj atıp yeni pencereyi erken başlatır. Not: ek hak vermez, sadece pencerenin ne zaman başlayıp biteceğini kaydırır. Anthropic bunu resmi olarak belgelemiyor, topluluk bilgisi.
 - [ ] Oturum açılışında otomatik başlat
 - [ ] Komut satırı aracı ve `ailimit://` URL şeması (betikler için)
-- [ ] Windows sürümü (Tauri ya da .NET, aynı ayrıştırma mantığıyla)
 
 ## Teknik borç
 - [ ] `ClaudeLimitAPI` kilitlerini async-güvenli yap (derleyici uyarısı)

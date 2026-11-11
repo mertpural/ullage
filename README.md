@@ -1,6 +1,6 @@
 # Ullage
 
-Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan (Windows'ta sistem tepsisinden ve küçük bir yüzen pencereden) gösteren küçük bir uygulama.
+Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan gösteren küçük bir uygulama.
 5 saatlik ve haftalık limitini, harcadığın token'ı ve geçmiş kullanımını tek yerden görürsün.
 
 ## ⬇️ İndir
@@ -8,8 +8,6 @@ Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü ç
 | | Dosya |
 |---|---|
 | **macOS** (Apple Silicon ve Intel) | [Ullage.zip](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip) |
-| **Windows** (kurulum) | [Ullage-Setup.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Setup.exe) |
-| **Windows** (kurulum istemez) | [Ullage-Portable.exe](https://github.com/mertpural/ullage/releases/latest/download/Ullage-Portable.exe) |
 
 Uygulama imzasız olduğu için ilk açılışta bir uyarı çıkar, bir kere onaylaman yeter (aşağıda).
 
@@ -53,14 +51,6 @@ git clone https://github.com/mertpural/ullage.git
 cd ullage/macos
 ./scripts/build_app.sh
 ```
-
-### Windows
-
-1. `Ullage-Setup.exe`'ye çift tıkla (ya da `Ullage-Portable.exe`'yi çalıştır).
-2. Windows "Bilgisayarınızı korudu" (SmartScreen) derse **Ek bilgi → Yine de çalıştır** de.
-3. Saatin yanındaki tepsi simgesine bak; gizliyse oku genişlet. Simgeye basınca Kullanım penceresi açılır, limitler yüzen widget'ta ve sağ tık menüsünde.
-
-Ayrıntılar ve kendin derlemek için: [`windows/`](windows).
 
 ## Limitler nereden geliyor?
 
