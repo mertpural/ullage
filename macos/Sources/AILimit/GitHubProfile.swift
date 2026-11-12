@@ -9,6 +9,8 @@ import Security
 enum ProfileCard {
     private static let keyFmt: DateFormatter = { let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f }()
 
+    private static let dayFmt: DateFormatter = { let f = DateFormatter(); f.locale = L.locale; f.dateStyle = .medium; return f }()
+
     static func svg(split: Bool, dark: Bool, now: Date = Date()) -> String {
         var cal = Calendar(identifier: .gregorian)
         cal.firstWeekday = 1
@@ -37,7 +39,7 @@ enum ProfileCard {
         let width = left * 2 + 53 * (cell + gap) - gap
         let height = top + 7 * (cell + gap) - gap + 40
         let en = L.en
-        let title = en ? "AI token usage" : "Yapay zekâ token kullanımı"
+        let title = "Ullage"
         let totalText = en ? "\(formatTokens(total)) tokens · last 12 months" : "\(formatTokens(total)) token · son 12 ay"
 
         var s = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\(width)\" height=\"\(height)\" viewBox=\"0 0 \(width) \(height)\" role=\"img\" aria-label=\"\(title)\">\n"
@@ -55,6 +57,7 @@ enum ProfileCard {
                 let r = Double(v) / Double(mx)
                 let lv = v == 0 ? 0 : (r < 0.15 ? 1 : (r < 0.4 ? 2 : (r < 0.7 ? 3 : 4)))
                 let x = left + w * (cell + gap), y = top + d * (cell + gap)
+                let tip = "<title>\(dayFmt.string(from: date)): \(v == 0 ? (en ? "no usage" : "kullanım yok") : formatTokens(v) + (en ? " tokens" : " token"))</title>"
                 if split, lv > 0 {
                     // Uygulamadaki gibi: kare, o günkü servis paylarına göre dikey bölümlere ayrılır; koyuluk yoğunluğu gösterir.
                     s += "<g transform=\"translate(\(x) \(y))\" clip-path=\"url(#c)\" fill-opacity=\"\(opacity[lv])\">"
@@ -65,14 +68,13 @@ enum ProfileCard {
                         s += "<rect y=\"\(String(format: "%.2f", yy))\" width=\"\(cell)\" height=\"\(String(format: "%.2f", h + 0.3))\" fill=\"\(provColor[name] ?? scale[3])\"/>"
                         yy += h
                     }
-                    s += "</g>\n"
+                    s += tip + "</g>\n"
                 } else {
-                    s += "<rect x=\"\(x)\" y=\"\(y)\" width=\"\(cell)\" height=\"\(cell)\" rx=\"2\" fill=\"\(scale[lv])\"/>\n"
+                    s += "<rect x=\"\(x)\" y=\"\(y)\" width=\"\(cell)\" height=\"\(cell)\" rx=\"2\" fill=\"\(scale[lv])\">\(tip)</rect>\n"
                 }
             }
         }
         let fy = height - 14
-        s += "<text x=\"\(left)\" y=\"\(fy)\" font-size=\"10\" fill=\"\(sub)\">Ullage</text>\n"
         if split {
             var x = width - left
             for (name, col) in [("Antigravity", "#294dcc"), ("Gemini", "#4285f5"), ("Codex", "#9ea1a8"), ("Claude", "#d97857")] {
