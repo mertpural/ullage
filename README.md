@@ -63,14 +63,6 @@ curl -L https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip 
   && open /Applications/Ullage.app
 ```
 
-Kendin derlemek istersen (Xcode'un tamamı gerekmez, `xcode-select --install` yeter):
-
-```bash
-git clone https://github.com/mertpural/ullage.git
-cd ullage/macos
-./scripts/build_app.sh
-```
-
 ## Limitler nereden geliyor?
 
 | Araç | Limit | Token |
