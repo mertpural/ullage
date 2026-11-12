@@ -324,6 +324,7 @@ struct AutomationPage: View {
         SettingRow(title: L.t("Claude pencere başlatıcı"), subtitle: "5 saatlik pencere bittiğinde Haiku'ya tek satırlık bir istek gönderip yeni pencereyi erken başlatır. Ek limit vermez, yalnızca pencerenin başlama saatini belirler. Her istek çok az token harcar.\(starterNote)") {
             Toggle("", isOn: $state.starterOn).toggleStyle(.switch).labelsHidden()
         }
+        GitHubProfileSettings()
     }
 }
 

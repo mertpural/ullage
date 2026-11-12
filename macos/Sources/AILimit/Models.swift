@@ -246,6 +246,9 @@ final class AppState: ObservableObject {
             UserDefaults.standard.set(true, forKey: "onboardingDone")
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { self.openDashboard("providers") }
         }
+        if let out = ProcessInfo.processInfo.environment["AILIMIT_PROFILECARD"] {
+            try? ProfileCard.svg(split: GitHubSync.split, dark: GitHubSync.dark).write(toFile: out, atomically: true, encoding: .utf8)
+        }
         if let page = ProcessInfo.processInfo.environment["AILIMIT_OPEN"] {
             DispatchQueue.main.asyncAfter(deadline: .now() + 6) { self.openDashboard(page) }
         }
@@ -296,6 +299,7 @@ final class AppState: ObservableObject {
                 if self.notificationsOn { Notifier.check(old: old, new: self.usage) }
                 self.scheduleStarter(claude)
                 if self.weeklySummaryOn && self.notificationsOn { WeeklySummary.sendIfDue() }
+                if GitHubSync.enabled { Task.detached { await GitHubSync.syncIfDue() } }
             }
         }
     }
