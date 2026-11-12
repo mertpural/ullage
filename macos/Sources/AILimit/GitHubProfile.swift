@@ -29,7 +29,8 @@ enum ProfileCard {
         let sub = dark ? "#8b949e" : "#656d76"
         let line = dark ? "#30363d" : "#d0d7de"
         let scale = dark ? ["#161b22", "#0e4f47", "#1a8a7c", "#3fc0ad", "#7fe8d8"] : ["#ebedf0", "#b6ece3", "#6fd3c3", "#2fa896", "#17695d"]
-        let provColor = ["claude": "#d97757", "codex": "#10a37f", "antigravity": "#8b5cf6", "gemini": "#4285f4"]
+        let provColor = ["claude": "#d97857", "codex": "#9ea1a8", "gemini": "#4285f5", "antigravity": "#294dcc"]  // uygulamadaki marka renkleri
+        let order = ["claude", "codex", "gemini", "antigravity"]
         let opacity = [0.0, 0.4, 0.6, 0.8, 1.0]
 
         let cell = 11, gap = 3, left = 20, top = 52
@@ -45,6 +46,7 @@ enum ProfileCard {
         s += "<text x=\"\(left)\" y=\"32\" font-size=\"15\" font-weight=\"600\" fill=\"\(text)\">\(title)</text>\n"
         s += "<text x=\"\(width - left)\" y=\"32\" font-size=\"12\" text-anchor=\"end\" fill=\"\(sub)\">\(totalText)</text>\n"
 
+        s += "<defs><clipPath id=\"c\"><rect width=\"\(cell)\" height=\"\(cell)\" rx=\"2\"/></clipPath></defs>\n"
         for w in 0..<53 {
             for d in 0..<7 {
                 guard let date = cal.date(byAdding: .day, value: w * 7 + d, to: start), date <= today else { continue }
@@ -52,19 +54,28 @@ enum ProfileCard {
                 let v = day.values.reduce(0, +)
                 let r = Double(v) / Double(mx)
                 let lv = v == 0 ? 0 : (r < 0.15 ? 1 : (r < 0.4 ? 2 : (r < 0.7 ? 3 : 4)))
-                var fill = scale[lv], op = 1.0
-                if split, lv > 0, let lead = day.max(by: { $0.value < $1.value })?.key {
-                    fill = provColor[lead] ?? scale[3]; op = opacity[lv]
-                }
                 let x = left + w * (cell + gap), y = top + d * (cell + gap)
-                s += "<rect x=\"\(x)\" y=\"\(y)\" width=\"\(cell)\" height=\"\(cell)\" rx=\"2\" fill=\"\(fill)\"" + (op < 1 ? " fill-opacity=\"\(op)\"" : "") + "/>\n"
+                if split, lv > 0 {
+                    // Uygulamadaki gibi: kare, o günkü servis paylarına göre dikey bölümlere ayrılır; koyuluk yoğunluğu gösterir.
+                    s += "<g transform=\"translate(\(x) \(y))\" clip-path=\"url(#c)\" fill-opacity=\"\(opacity[lv])\">"
+                    var yy = 0.0
+                    for name in order {
+                        guard let tv = day[name], tv > 0 else { continue }
+                        let h = Double(cell) * Double(tv) / Double(v)
+                        s += "<rect y=\"\(String(format: "%.2f", yy))\" width=\"\(cell)\" height=\"\(String(format: "%.2f", h + 0.3))\" fill=\"\(provColor[name] ?? scale[3])\"/>"
+                        yy += h
+                    }
+                    s += "</g>\n"
+                } else {
+                    s += "<rect x=\"\(x)\" y=\"\(y)\" width=\"\(cell)\" height=\"\(cell)\" rx=\"2\" fill=\"\(scale[lv])\"/>\n"
+                }
             }
         }
         let fy = height - 14
         s += "<text x=\"\(left)\" y=\"\(fy)\" font-size=\"10\" fill=\"\(sub)\">Ullage</text>\n"
         if split {
             var x = width - left
-            for (name, col) in [("Antigravity", "#8b5cf6"), ("Codex", "#10a37f"), ("Claude", "#d97757")] {
+            for (name, col) in [("Antigravity", "#294dcc"), ("Gemini", "#4285f5"), ("Codex", "#9ea1a8"), ("Claude", "#d97857")] {
                 s += "<text x=\"\(x)\" y=\"\(fy)\" font-size=\"10\" text-anchor=\"end\" fill=\"\(sub)\">\(name)</text>\n"
                 let tw = name.count * 6 + 6
                 s += "<rect x=\"\(x - tw - 10)\" y=\"\(fy - 9)\" width=\"9\" height=\"9\" rx=\"2\" fill=\"\(col)\"/>\n"
@@ -142,7 +153,7 @@ enum GitHubSync {
     /// `force`: elle gönderimde değişiklik kontrolü yapılmaz.
     @discardableResult
     static func push(force: Bool) async -> String {
-        guard let tok = token(), !user.isEmpty else { return L.t("Kullanıcı adı ve anahtar gerekli") }
+        guard let tok = ProcessInfo.processInfo.environment["AILIMIT_GHTOKEN"] ?? token(), !user.isEmpty else { return L.t("Kullanıcı adı ve anahtar gerekli") }
         let now = Date().timeIntervalSince1970
         d.set(now, forKey: "ghLastTry")
         let svg = ProfileCard.svg(split: split, dark: dark)
@@ -151,7 +162,8 @@ enum GitHubSync {
             d.set(now, forKey: "ghLastPush")
             return L.t("Kart değişmemiş, gönderilmedi")
         }
-        let url = URL(string: "https://api.github.com/repos/\(user)/\(user)/contents/\(fileName)")!
+        let base = ProcessInfo.processInfo.environment["AILIMIT_GHAPI"] ?? "https://api.github.com"
+        let url = URL(string: "\(base)/repos/\(user)/\(user)/contents/\(fileName)")!
         func req(_ method: String, body: Data? = nil) -> URLRequest {
             var r = URLRequest(url: url, timeoutInterval: 20)
             r.httpMethod = method

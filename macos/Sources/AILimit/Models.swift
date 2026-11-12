@@ -246,6 +246,9 @@ final class AppState: ObservableObject {
             UserDefaults.standard.set(true, forKey: "onboardingDone")
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { self.openDashboard("providers") }
         }
+        if ProcessInfo.processInfo.environment["AILIMIT_GHTEST"] != nil {
+            Task { let r = await GitHubSync.push(force: true); print("GHTEST:", r); exit(0) }
+        }
         if let out = ProcessInfo.processInfo.environment["AILIMIT_PROFILECARD"] {
             try? ProfileCard.svg(split: GitHubSync.split, dark: GitHubSync.dark).write(toFile: out, atomically: true, encoding: .utf8)
         }
