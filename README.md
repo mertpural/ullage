@@ -24,7 +24,23 @@ Uygulama imzasız olduğu için ilk açılışta bir uyarı çıkar, bir kere on
 
 <p align="center"><img src="docs/profil-karti.svg" alt="Ullage GitHub profil kartı" width="100%"></p>
 
-Desteklenenler: **Claude, Codex, Antigravity** (Gemini de hesabında Code Assist lisansı varsa, şimdilik yalnızca Mac'te).
+### Desteklenen araçlar
+
+| Araç | Ne gösterir | Nasıl okunur |
+|---|---|---|
+| **Claude** (Claude Code ve Claude uygulaması) | Kalan 5 saatlik ve haftalık limit, token | `~/.claude` kayıtları, limit için Claude Code'un kendi oturumu |
+| **Codex** | Kalan 5 saatlik ve haftalık limit, token | `~/.codex/sessions` kayıtları |
+| **Antigravity** | Kalan limit (IDE açıkken), token | Uygulamanın kendi yerel sunucusu ve kayıtları |
+| **Gemini** (Code Assist lisansı varsa) | Günlük kota | Gemini CLI girişi |
+| **OpenCode** | Yalnızca token | `~/.local/share/opencode` kayıtları |
+| **Kimi CLI** | Yalnızca token | `~/.kimi/sessions` kayıtları |
+| **Cline / Roo Code** (VS Code, Cursor, Windsurf, VSCodium) | Yalnızca token | Eklentinin kendi görev klasörleri |
+
+İlk dört araç her zaman listede durur. **OpenCode, Kimi ve Cline yalnızca bilgisayarında izi varsa görünür:** kayıt klasörü yoksa Ullage onları hiç göstermez, ayarlarda da çıkmaz. Kullanmaya başlayınca kendiliğinden **Sağlayıcılar** sayfasında belirir. Menü çubuğunda ve açılır pencerede görünmesi için oradan açman gerekir, kendiliğinden eklenmezler.
+
+Bu üç araçta kalan limit okunmaz, çünkü genelde kendi API anahtarınla çalışırlar. Ullage yalnızca harcadığın token'ı sayar; kartlarda, kullanım sayfasında ve etkinlik tablosunda diğer araçlarla birlikte görünür. Kayıt biçimleri belgelerden alındı ve henüz gerçek kurulumlarla denenmedi; araç güncellenip biçimi değiştirirse ilgili kayıtlar sessizce atlanır, uygulama etkilenmez.
+
+Diğer web siteleri (ChatGPT, Perplexity, Grok gibi) bilgisayarda kayıt bırakmadığı için desteklenmiyor.
 
 ## Kurulum
 
