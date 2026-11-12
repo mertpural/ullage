@@ -19,7 +19,10 @@ Uygulama imzasız olduğu için ilk açılışta bir uyarı çıkar, bir kere on
 - "Cache dahil" seçimi: açarsan her yerdeki toplamlar cache okumalarını da sayar.
 - CSV olarak dışa aktarma ve paylaşabileceğin haftalık özet kartı (resim).
 - 9 tema, hakkın azalınca bildirim, Pazartesi sabahı haftalık özet, Türkçe ve İngilizce arayüz.
-- Hiçbir veri bir yere gönderilmez. Her şey kendi bilgisayarında, kendi hesabınla okunur.
+- **GitHub profil kartı** (isteğe bağlı): token kullanım ısı haritanı kendi profil reposuna bir resim olarak koyar ve günde bir güncel tutar. Ayarlar > Otomasyon'dan açılır.
+- Hiçbir veri bir yere gönderilmez. Her şey kendi bilgisayarında, kendi hesabınla okunur. (Profil kartını açarsan yalnızca günlük toplam token'ın kendi GitHub reposuna gider.)
+
+<p align="center"><img src="docs/profil-karti.svg" alt="Ullage GitHub profil kartı" width="100%"></p>
 
 Desteklenenler: **Claude, Codex, Antigravity** (Gemini de hesabında Code Assist lisansı varsa, şimdilik yalnızca Mac'te).
 
