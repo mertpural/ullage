@@ -3,7 +3,13 @@ import AppKit
 
 enum Provider: String, CaseIterable, Identifiable {
     case claude, codex, gemini, antigravity
+    case opencode, kimi, cline   // ek araçlar: yalnızca bilgisayarda izi varsa görünür (ExtraProviders)
     var id: String { rawValue }
+
+    /// Çekirdek dört servis her zaman; ek araçlar yalnızca verisi bulunuyorsa.
+    static var allCases: [Provider] { core + ExtraProviders.present() }
+    static let core: [Provider] = [.claude, .codex, .gemini, .antigravity]
+    static let every: [Provider] = core + ExtraProviders.all
 
     var name: String {
         switch self {
@@ -11,6 +17,9 @@ enum Provider: String, CaseIterable, Identifiable {
         case .codex: "Codex"
         case .gemini: "Gemini"
         case .antigravity: "Antigravity"
+        case .opencode: "OpenCode"
+        case .kimi: "Kimi"
+        case .cline: "Cline"
         }
     }
 
@@ -20,6 +29,9 @@ enum Provider: String, CaseIterable, Identifiable {
         case .codex: "X"
         case .gemini: "G"
         case .antigravity: "A"
+        case .opencode: "O"
+        case .kimi: "K"
+        case .cline: "L"
         }
     }
 
@@ -29,6 +41,9 @@ enum Provider: String, CaseIterable, Identifiable {
         case .codex: Color(red: 0.62, green: 0.63, blue: 0.66)
         case .gemini: Color(red: 0.26, green: 0.52, blue: 0.96)
         case .antigravity: Color(red: 0.16, green: 0.30, blue: 0.80)
+        case .opencode: Color(red: 0.30, green: 0.80, blue: 0.55)
+        case .kimi: Color(red: 0.52, green: 0.36, blue: 0.92)
+        case .cline: Color(red: 0.95, green: 0.75, blue: 0.25)
         }
     }
 
@@ -45,6 +60,7 @@ enum Provider: String, CaseIterable, Identifiable {
         case .codex: apps = ["/Applications/Codex.app", "/Applications/ChatGPT.app"]
         case .gemini: apps = []
         case .antigravity: apps = ["/Applications/Antigravity IDE.app", "/Applications/Antigravity.app"]
+        case .opencode, .kimi, .cline: apps = []
         }
         for path in apps where FileManager.default.fileExists(atPath: path) {
             return NSWorkspace.shared.icon(forFile: path)
@@ -231,7 +247,7 @@ final class AppState: ObservableObject {
         if let img = r.nsImage { NSApplication.shared.applicationIconImage = img }
     }
     @Published var usage: [Provider: Usage] = Dictionary(
-        uniqueKeysWithValues: Provider.allCases.map { ($0, Usage.loading()) }
+        uniqueKeysWithValues: Provider.every.map { ($0, Usage.loading()) }
     )
 
     init() {
@@ -245,6 +261,20 @@ final class AppState: ObservableObject {
         if !UserDefaults.standard.bool(forKey: "onboardingDone") {
             UserDefaults.standard.set(true, forKey: "onboardingDone")
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { self.openDashboard("providers") }
+        }
+        if ProcessInfo.processInfo.environment["AILIMIT_EXTRATEST"] != nil {
+            let oc = #"{"id":"msg_1","role":"assistant","modelID":"gpt-5","time":{"created":1794400000000},"tokens":{"input":100,"output":50,"reasoning":10,"cache":{"read":300,"write":20}}}"#
+            let ocUser = #"{"id":"msg_0","role":"user","time":{"created":1794400000000}}"#
+            let kimi = "{\"timestamp\":1794400100.5,\"message\":{\"type\":\"StatusUpdate\",\"payload\":{\"token_usage\":{\"input_other\":200,\"output\":40,\"input_cache_read\":500,\"input_cache_creation\":30}}}}\n{\"timestamp\":1794400200,\"message\":{\"type\":\"TurnBegin\"}}\n{\"message\":{\"payload\":{\"token_usage\":{\"input_other\":0,\"output\":0}}}}\n"
+            let inner = #"{\"tokensIn\":70,\"tokensOut\":30,\"cacheWrites\":5,\"cacheReads\":60,\"cost\":0.01}"#
+            let cline = "[{\"ts\":1794400300000,\"type\":\"say\",\"say\":\"text\",\"text\":\"hi\"},{\"ts\":1794400400000,\"type\":\"say\",\"say\":\"api_req_started\",\"text\":\"" + inner + "\"}]"
+            print("opencode:", ExtraProviders.parseOpenCode(Data(oc.utf8), name: "msg_1.json").map { "\($0.model) in=\($0.input) out=\($0.output) cw=\($0.cacheWrite) cr=\($0.cacheRead) ts=\($0.ts)" })
+            print("opencode user:", ExtraProviders.parseOpenCode(Data(ocUser.utf8), name: "msg_0.json").count)
+            print("kimi:", ExtraProviders.parseKimi(Data(kimi.utf8), path: "/x/wire.jsonl", fallback: 5).map { "in=\($0.input) out=\($0.output) cw=\($0.cacheWrite) cr=\($0.cacheRead) ts=\($0.ts) key=\($0.key)" })
+            print("cline:", ExtraProviders.parseCline(Data(cline.utf8), task: "t1", roo: false).map { "\($0.model) in=\($0.input) out=\($0.output) cw=\($0.cacheWrite) cr=\($0.cacheRead) key=\($0.key)" })
+            print("garbage:", ExtraProviders.parseCline(Data("nope".utf8), task: "t", roo: true).count, ExtraProviders.parseKimi(Data("{{{\n".utf8), path: "p", fallback: 1).count, ExtraProviders.parseOpenCode(Data("[]".utf8), name: "x").count)
+            print("allCases:", Provider.allCases.map(\.rawValue))
+            fflush(stdout); exit(0)
         }
         if ProcessInfo.processInfo.environment["AILIMIT_GHTEST"] != nil {
             Task { let r = await GitHubSync.push(force: true); print("GHTEST:", r); exit(0) }
@@ -289,6 +319,8 @@ final class AppState: ObservableObject {
             let anti = await antiTask
             let gemini = await geminiTask
             var daily: [Provider: [Int]] = [:]
+            var extras: [Provider: Usage] = [:]
+            for p in ExtraProviders.present(force: true) { extras[p] = ExtraProviders.read(p) }
             for p in Provider.allCases { daily[p] = HistoryStore.shared.dailyTotals(provider: p.rawValue, days: 7) }
             await MainActor.run {
                 self.daily = daily
@@ -299,6 +331,7 @@ final class AppState: ObservableObject {
                 self.usage[.codex] = codex
                 self.usage[.antigravity] = anti
                 self.usage[.gemini] = gemini
+                for (p, u) in extras { self.usage[p] = u }
                 if self.notificationsOn { Notifier.check(old: old, new: self.usage) }
                 self.scheduleStarter(claude)
                 if self.weeklySummaryOn && self.notificationsOn { WeeklySummary.sendIfDue() }

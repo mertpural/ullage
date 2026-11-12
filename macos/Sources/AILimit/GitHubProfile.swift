@@ -31,8 +31,8 @@ enum ProfileCard {
         let sub = dark ? "#8b949e" : "#656d76"
         let line = dark ? "#30363d" : "#d0d7de"
         let scale = dark ? ["#161b22", "#0e4f47", "#1a8a7c", "#3fc0ad", "#7fe8d8"] : ["#ebedf0", "#b6ece3", "#6fd3c3", "#2fa896", "#17695d"]
-        let provColor = ["claude": "#d97857", "codex": "#9ea1a8", "gemini": "#4285f5", "antigravity": "#294dcc"]  // uygulamadaki marka renkleri
-        let order = ["claude", "codex", "gemini", "antigravity"]
+        let provColor = ["claude": "#d97857", "codex": "#9ea1a8", "gemini": "#4285f5", "antigravity": "#294dcc", "opencode": "#4dcc8c", "kimi": "#855cea", "cline": "#f2bf40"]  // uygulamadaki marka renkleri
+        let order = ["claude", "codex", "gemini", "antigravity", "opencode", "kimi", "cline"]
         let opacity = [0.0, 0.4, 0.6, 0.8, 1.0]
 
         let cell = 11, gap = 3, left = 20, top = 52
@@ -77,7 +77,7 @@ enum ProfileCard {
         let fy = height - 14
         if split {
             var x = width - left
-            for (name, col) in [("Antigravity", "#294dcc"), ("Gemini", "#4285f5"), ("Codex", "#9ea1a8"), ("Claude", "#d97857")] {
+            for (name, col) in Provider.allCases.reversed().map({ ($0.name, provColor[$0.rawValue] ?? "#888888") }) {
                 s += "<text x=\"\(x)\" y=\"\(fy)\" font-size=\"10\" text-anchor=\"end\" fill=\"\(sub)\">\(name)</text>\n"
                 let tw = name.count * 6 + 6
                 s += "<rect x=\"\(x - tw - 10)\" y=\"\(fy - 9)\" width=\"9\" height=\"9\" rx=\"2\" fill=\"\(col)\"/>\n"
