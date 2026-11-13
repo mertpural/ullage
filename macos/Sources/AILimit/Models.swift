@@ -256,6 +256,7 @@ final class AppState: ObservableObject {
             ?? [.claude, .codex, .antigravity]
         if notificationsOn { Notifier.requestAuthorization() }
         startRefreshing()
+        UpdateModel.shared.checkIfDue()
         DispatchQueue.main.async { self.applyThemeIcon() }
         if statusLineOn && !StatusLine.installed { statusLineMessage = StatusLine.install() ?? "" }
         if !UserDefaults.standard.bool(forKey: "onboardingDone") {
@@ -275,6 +276,16 @@ final class AppState: ObservableObject {
             print("garbage:", ExtraProviders.parseCline(Data("nope".utf8), task: "t", roo: true).count, ExtraProviders.parseKimi(Data("{{{\n".utf8), path: "p", fallback: 1).count, ExtraProviders.parseOpenCode(Data("[]".utf8), name: "x").count)
             print("allCases:", Provider.allCases.map(\.rawValue))
             fflush(stdout); exit(0)
+        }
+        if ProcessInfo.processInfo.environment["AILIMIT_UPDATETEST"] != nil {
+            Task { @MainActor in
+                let u = UpdateModel.shared
+                await u.check(manual: true)
+                print("UPDATETEST check:", u.status, u.available?.version ?? "-"); fflush(stdout)
+                if u.available != nil { await u.install(); print("UPDATETEST install:", u.status); fflush(stdout) }
+                try? await Task.sleep(nanoseconds: 4_000_000_000)
+                if ProcessInfo.processInfo.environment["AILIMIT_UPDATETEST"] == "check" { fflush(stdout); exit(0) }
+            }
         }
         if ProcessInfo.processInfo.environment["AILIMIT_GHTEST"] != nil {
             Task { let r = await GitHubSync.push(force: true); print("GHTEST:", r); exit(0) }

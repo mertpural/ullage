@@ -342,6 +342,7 @@ struct AboutPage: View {
             }
         }
         .card(t, padding: 16)
+        UpdateCard()
         VStack(alignment: .leading, spacing: 10) {
             Text(L.t("Veri doğruluğu etiketleri")).font(t.font(13, .semibold))
             HStack(spacing: 8) { ConfidenceTag(c: .exact); Text(L.t("Sağlayıcının kendi verisi ya da kayıtlardan birebir.")).font(t.font(12)).foregroundStyle(t.sub) }
