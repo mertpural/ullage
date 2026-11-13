@@ -6,9 +6,13 @@ import AppKit
 @MainActor
 final class ProjectsModel: ObservableObject {
     @Published var rows: [(name: String, tokens: Int, cost: Double)] = []
+    /// Gün sayısı; 0 = tüm zamanlar. Varsayılan tümü: süre sınırı yok.
+    @Published var days: Int = UserDefaults.standard.object(forKey: "projectsDays") as? Int ?? 0 {
+        didSet { UserDefaults.standard.set(days, forKey: "projectsDays"); load() }
+    }
 
     func load() {
-        let since = Calendar.current.date(byAdding: .day, value: -29, to: Calendar.current.startOfDay(for: Date()))!
+        let since = days == 0 ? Date.distantPast : Calendar.current.date(byAdding: .day, value: -(days - 1), to: Calendar.current.startOfDay(for: Date()))!
         DispatchQueue.global().async {
             var byProject: [String: (Int, Double)] = [:]
             for r in HistoryStore.shared.projectSums(since: since) {
@@ -36,7 +40,8 @@ struct ProjectsCard: View {
             HStack {
                 Text(L.t("EN ÇOK KULLANILAN PROJELER")).font(t.font(10, .bold)).foregroundStyle(t.sub)
                 Spacer()
-                Text(L.t("Son 30 gün · yalnızca Claude Code, klasör adıyla")).font(t.font(10)).foregroundStyle(t.sub)
+                Text(L.t("Yalnızca Claude Code, klasör adıyla")).font(t.font(10)).foregroundStyle(t.sub)
+                ThemedSegmented(t: t, items: [(L.t("30 gün"), 30), (L.t("90 gün"), 90), (L.t("Tümü"), 0)], selection: $model.days)
             }
             if rows.isEmpty {
                 Text(L.t("Henüz proje verisi yok.")).font(t.font(11)).foregroundStyle(t.sub)

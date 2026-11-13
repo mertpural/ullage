@@ -56,6 +56,12 @@ INSTALLED="/Applications/$APP_NAME.app"
 if [ -d "$INSTALLED" ]; then
   ditto --norsrc --noextattr "$APP" "$INSTALLED"
   xattr -cr "$INSTALLED" 2>/dev/null || true   # Finder bilgisi imzayı bozar
+  # Kopyadan sonra imza bozulabiliyor: kurulu kopyada yeniden imzalanır ve doğrulanır; olmazsa betik hata verir.
+  if ! codesign -v "$INSTALLED" 2>/dev/null; then
+    xattr -cr "$INSTALLED" 2>/dev/null; dot_clean -m "$INSTALLED" 2>/dev/null
+    codesign --force --sign "$SIGN_ID" "$INSTALLED" || { echo "HATA: kurulu uygulama imzalanamadı"; exit 1; }
+  fi
+  codesign -v "$INSTALLED" && echo "İmza doğrulandı: $INSTALLED"
   echo "Kurulu uygulama güncellendi: $INSTALLED"
   # Derleme çıktısı ikinci bir "Ullage.app" olarak kalmasın (Spotlight'ta çift görünür). Paketleme zip için ona ihtiyaç duyar.
   if [ -z "${ULLAGE_PACKAGING:-}" ]; then

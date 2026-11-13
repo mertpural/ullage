@@ -208,7 +208,7 @@ enum L {
         "%@/%@ reposu bulunamadı. GitHub'da bu adla bir repo aç (README'li, herkese açık).": "Repo %@/%@ not found. Create a public repo with that name on GitHub (with a README).",
         "GitHub hatası (%lld)": "GitHub error (%lld)",
         "GitHub'a bağlanılamadı": "Could not reach GitHub",
-        "claude komutu bulunamadı": "claude command not found", "Zaman aşımı": "Timed out", "Limit henüz ölçülmedi": "Limit not measured yet", "Bu araçta kalan limit okunmuyor; yalnızca token sayılıyor.": "This tool has no limit to read; only tokens are counted.", "Claude girişi süresi dolmuş: Terminal'de claude yazıp /login yap.": "Claude sign-in expired: run claude in Terminal and type /login.", "Yeni pencere başlatıldı": "New window started",
+        "claude komutu bulunamadı": "claude command not found", "Zaman aşımı": "Timed out", "Limit henüz ölçülmedi": "Limit not measured yet", "Yalnızca Claude Code, klasör adıyla": "Claude Code only, by folder name", "90 gün": "90 days", "Bu araçta kalan limit okunmuyor; yalnızca token sayılıyor.": "This tool has no limit to read; only tokens are counted.", "Claude girişi süresi dolmuş: Terminal'de claude yazıp /login yap.": "Claude sign-in expired: run claude in Terminal and type /login.", "Yeni pencere başlatıldı": "New window started",
         "Başlatılıyor…": "Starting…",
         // Sağlayıcı notları ve hataları
         "Token: ~/.claude kayıtlarından (Claude Code ve Desktop), cache okumaları hariç.": "Tokens: from ~/.claude logs (Claude Code and Desktop), cache reads excluded.",
