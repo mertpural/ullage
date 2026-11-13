@@ -14,6 +14,8 @@ Mac'in üst menü çubuğunda Claude, Codex, Gemini ve Antigravity için kalan h
 
 [**⬇️ İndir (macOS)**](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip) · [Web sitesi](https://ullage-app.netlify.app) · [Sorun bildir](https://github.com/mertpural/ullage/issues)
 
+[English](README.en.md) · **Türkçe**
+
 <img src="docs/menubar.png" alt="Menü çubuğunda Ullage" width="720">
 
 </div>
