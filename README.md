@@ -1,30 +1,52 @@
+<div align="center">
+
+<img src="docs/icon.png" alt="Ullage" width="96" height="96">
+
 # Ullage
 
-Yapay zeka araçlarında **ne kadar hakkın kaldığını** Mac'in üst menü çubuğundan gösteren küçük bir uygulama.
-5 saatlik ve haftalık limitini, harcadığın token'ı ve geçmiş kullanımını tek yerden görürsün.
+**Yapay zekâ limitine çarpmadan önce bil.**
+Mac'in üst menü çubuğunda Claude, Codex, Gemini ve Antigravity için kalan hakkını gösterir.
 
-## ⬇️ İndir
+[![Son sürüm](https://img.shields.io/github/v/release/mertpural/ullage?style=flat-square&color=5fd6c4&label=s%C3%BCr%C3%BCm)](https://github.com/mertpural/ullage/releases/latest)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-informational?style=flat-square)
+![Gizlilik](https://img.shields.io/badge/veri-yaln%C4%B1zca%20bilgisayar%C4%B1nda-success?style=flat-square)
+[![Lisans](https://img.shields.io/github/license/mertpural/ullage?style=flat-square)](LICENSE)
 
-| | Dosya |
+[**⬇️ İndir (macOS)**](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip) · [Web sitesi](https://ullage-app.netlify.app) · [Sorun bildir](https://github.com/mertpural/ullage/issues)
+
+<img src="docs/menubar.png" alt="Menü çubuğunda Ullage" width="720">
+
+</div>
+
+<p align="center">
+  <img src="docs/ekran-koyu.png" alt="Koyu tema" width="31%">
+  <img src="docs/ekran-kagit.png" alt="Kâğıt teması" width="31%">
+  <img src="docs/ekran-neon.png" alt="Neon teması" width="31%">
+</p>
+<p align="center"><sub>Örnek değerlerle gösterim. 9 tema var, hepsi ayarlardan seçilir.</sub></p>
+
+## Neden Ullage?
+
+*Ullage*, bir depoda sıvının üstünde kalan boşluk demek. Ullage de sana hakkının ne kadarının boş kaldığını söyler.
+
+| | |
 |---|---|
-| **macOS** (Apple Silicon ve Intel) | [Ullage.zip](https://github.com/mertpural/ullage/releases/latest/download/Ullage.zip) |
+| 🕐 **Kalan limit, bir bakışta** | 5 saatlik ve haftalık kalan hakkın menü çubuğunda, ne zaman yenileneceğiyle birlikte. Yüzde, çubuk, halka ya da pil gösterimi seç. |
+| 🔔 **Zamanında haber** | Hakkın %15 ve %5'in altına inince ve limit yenilenince bildirim. Pazartesi sabahı geçen haftanın özeti. |
+| 📈 **Bu hızla biter mi?** | Şu tempoyla gidersen limitin ne zaman biteceğini söyler ("Bu hızla biter: 19:40"). |
+| 📊 **Kullanım geçmişi** | GitHub'daki katkı tablosuna benzer etkinlik haritası, günlük ve aylık token grafikleri, en çok kullandığın projeler, tahmini maliyet. CSV olarak dışa aktarılır. |
+| 🧩 **Birden çok araç** | Claude, Codex, Gemini, Antigravity. İzi varsa OpenCode, Kimi ve Cline/Roo Code token'ları da. |
+| 🎨 **Senin görünümün** | 9 tema, Türkçe ve İngilizce arayüz. |
+| 🔒 **Gizli** | Hiçbir veri bir yere gönderilmez. Sunucusu, hesabı, izleyicisi yok. Sohbet içeriğine bakmaz, yalnızca kullanım sayılarını okur. |
+| 🔄 **Kendini güncel tutar** | Yeni sürüm çıkınca bildirim gelir, tek tıkla güncellenir (isteğe bağlı). |
 
-Uygulama imzasız olduğu için ilk açılışta bir uyarı çıkar, bir kere onaylaman yeter (aşağıda).
+## GitHub profil kartı
 
-## Ne yapıyor?
-
-- Menü çubuğunda `5s 77%  H 48%` gibi görünür: 5 saatlik ve haftalık kalan hakkın ayrı ayrı. Gösterimi (yüzde, çubuk, halka, pil...) sen seçersin.
-- Tıklayınca hakkın ne zaman yenileneceğini ve şu tempoyla gidersen yetip yetmeyeceğini gösterir ("Bu hızla biter: 19:40").
-- **Kullanım** sayfası: GitHub'daki katkı tablosuna benzer etkinlik tablosu, seri sayacı, günlük/haftalık/aylık token grafikleri, en çok kullandığın projeler, API fiyatıyla tahmini maliyet.
-- "Cache dahil" seçimi: açarsan her yerdeki toplamlar cache okumalarını da sayar.
-- CSV olarak dışa aktarma ve paylaşabileceğin haftalık özet kartı (resim).
-- 9 tema, hakkın azalınca bildirim, Pazartesi sabahı haftalık özet, Türkçe ve İngilizce arayüz.
-- **GitHub profil kartı** (isteğe bağlı): token kullanım ısı haritanı kendi profil reposuna bir resim olarak koyar ve günde bir güncel tutar. Ayarlar > Otomasyon'dan açılır.
-- Hiçbir veri bir yere gönderilmez. Her şey kendi bilgisayarında, kendi hesabınla okunur. (Profil kartını açarsan yalnızca günlük toplam token'ın kendi GitHub reposuna gider.)
+İstersen token kullanım haritanı GitHub profiline koyabilirsin. Ullage, kendi profil reponda bir resmi günde bir günceller. Resimde yalnızca günlük toplam token vardır. Ayarlar > Otomasyon'dan açılır.
 
 <p align="center"><img src="docs/profil-karti.svg" alt="Ullage GitHub profil kartı" width="100%"></p>
 
-### Desteklenen araçlar
+## Desteklenen araçlar
 
 | Araç | Ne gösterir | Nasıl okunur |
 |---|---|---|
